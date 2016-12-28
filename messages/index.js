@@ -38,7 +38,7 @@ bot.dialog('/', [
     },
     function (session, results) {
         session.userData.time = results.response.entity;
-        session.send("So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+        builder.Prompts.text("So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
         session.userData.date + " " + session.userData.time + "?");
     },
     function (session, results) {
