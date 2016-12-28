@@ -23,18 +23,27 @@ bot.dialog('/', [
         builder.Prompts.text(session, "Hello... What do you want to do today?");
     },
     function (session, results) {
-        session.userData.name = results.response;
-        builder.Prompts.number(session, "What classes do you want to book?"); 
+        session.userData.task = results.response;
+        if(session.userData.task == "Book a class") {
+            builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+        }
     },
     function (session, results) {
-        session.userData.coding = results.response;
-        builder.Prompts.choice(session, "What language do you code Node using?", ["JavaScript", "CoffeeScript", "TypeScript"]);
+        session.userData.toBeBooked = results.response.entity;
+        builder.Prompts.text(session, "What date?");
     },
     function (session, results) {
-        session.userData.language = results.response.entity;
-        session.send("Got it... " + session.userData.name + 
-                    " you've been programming for " + session.userData.coding + 
-                    " years and use " + session.userData.language + ".");
+        session.userData.date = results.response;
+        builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
+    },
+    function (session, results) {
+        session.userData.time = results.response.entity;
+        session.send("So..you want to book a" + session.userData.toBeBooked + " class, which is on " +
+        session.userData.date + "at " + session.userData.time + "?");
+    },
+    function (session, results) {
+        session.userData.confirmation = results.response;
+        session.send("Your booking is confirmed!");
     }
 ]);
 
@@ -44,7 +53,7 @@ if (useEmulator) {
     server.listen(3978, function() {
         console.log('test bot endpont at http://localhost:3978/api/messages');
     });
-    server.post('/api/messages', connector.listen());    
+    server.post('/api/messages', connector.listen());
 } else {
     module.exports = { default: connector.listen() }
 }
