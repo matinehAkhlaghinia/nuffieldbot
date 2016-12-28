@@ -38,12 +38,15 @@ bot.dialog('/', [
     },
     function (session, results) {
         session.userData.time = results.response.entity;
-        session.send("So..you want to book a" + session.userData.toBeBooked + " class, which is on " +
-        session.userData.date + "at " + session.userData.time + "?");
+        session.send("So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+        session.userData.date + " " + session.userData.time + "?");
     },
     function (session, results) {
         session.userData.confirmation = results.response;
-        session.send("Your booking is confirmed!");
+        if(session.userData.confirmation == "yes") {
+            session.send("Your booking is confirmed!");
+        }
+        session.endDialogWithResult({ response: session.userData });
     }
 ]);
 
