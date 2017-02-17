@@ -18,10 +18,10 @@ var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure
 
 var bot = new builder.UniversalBot(connector);
 
-// LUIS bit
-var model = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=d935e1dfb6e44c77816b534797f6a272&verbose=true';
-var recognizer = new builder.LuisRecognizer(model);
-var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
+// // LUIS bit
+// var model = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=d935e1dfb6e44c77816b534797f6a272&verbose=true';
+// var recognizer = new builder.LuisRecognizer(model);
+// var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
 
 bot.dialog('/', [
     function (session) {
