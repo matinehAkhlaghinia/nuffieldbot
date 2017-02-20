@@ -16,9 +16,48 @@ var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure
     openIdMetadata: process.env['BotOpenIdMetadata']
 });
 
+const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+
+// Main dialog with LUIS
+var recognizer = new builder.LuisRecognizer(LuisModelUrl);
+var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+
+bot.dialog('/', intents);
+
+intents.matches('BookClass', [
+  function (session, results) {
+      session.userData.task = results.response;
+      if(session.userData.task == "Book a class") {
+          builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+      }
+  },
+  function (session, results) {
+      session.userData.toBeBooked = results.response.entity;
+      builder.Prompts.text(session, "What date?");
+  },
+  function (session, results) {
+      session.userData.date = results.response;
+      builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
+  },
+  function (session, results) {
+      session.userData.time = results.response.entity;
+      builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+      session.userData.date + " " + session.userData.time + "?");
+  },
+  function (session, results) {
+      session.userData.confirmation = results.response;
+      if(session.userData.confirmation == "yes") {
+          session.send("Your booking is confirmed!");
+      }
+      session.endDialogWithResult({ response: session.userData });
+  }
+ ]);
+//intents.matches('ViewClass', (session, args) => { ... });
+//intents.matches('Help', builder.DialogAction.send('Hi! Try asking me things like ...'));
+
 var bot = new builder.UniversalBot(connector);
 
-bot.dialog('/', [
+/*bot.dialog('/', [
     function (session) {
         builder.Prompts.text(session, "Hello... What do you want to do today?");
     },
@@ -48,7 +87,7 @@ bot.dialog('/', [
         }
         session.endDialogWithResult({ response: session.userData });
     }
-]);
+]);*/
 
 if (useEmulator) {
     var restify = require('restify');
