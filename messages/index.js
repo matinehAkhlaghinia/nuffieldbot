@@ -27,10 +27,8 @@ bot.dialog('/', intents);
 
 intents.matches('BookClass', [
   function (session, results) {
-      session.userData.task = results.response;
-      if(session.userData.task == "Book a class") {
-          builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
-      }
+      //session.userData.task = results.response;
+      builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
   },
   function (session, results) {
       session.userData.toBeBooked = results.response.entity;
