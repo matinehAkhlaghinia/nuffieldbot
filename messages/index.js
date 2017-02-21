@@ -21,6 +21,7 @@ const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', intents);
 
@@ -55,12 +56,9 @@ intents.matches('BookClass', [
 //intents.matches('ViewClass', (session, args) => { ... });
 //intents.matches('Help', builder.DialogAction.send('Hi! Try asking me things like ...'));
 
-var bot = new builder.UniversalBot(connector);
-
-
+//var bot = new builder.UniversalBot(connector);
 
 /*bot.dialog('/', [
-
     function (session) {
         builder.Prompts.text(session, "Hello... What do you want to do today?");
     },
