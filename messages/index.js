@@ -26,6 +26,25 @@ var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', intents);
 
+intents.matches('CancelClass', [
+  function (session, results) {
+      //session.userData.task = results.response;
+      builder.Prompts.choice(session, "Which class do you want to cancel?");
+  },
+  function (session, results) {
+      session.userData.toBeCanceled = results.response.entity;
+      builder.Prompts.text(session, "Is this info about the class you want to cancel correct?");
+      builder.Prompts.text(session, session.userData.toBeCanceled);
+  },
+  function (session, results) {
+      session.userData.confirmation = results.response;
+      if(session.userData.confirmation == "yes") {
+          session.send("Your booking is confirmed!");
+      }
+      session.endDialogWithResult({ response: session.userData });
+  }
+]);
+
 intents.matches('BookClass', [
   function (session, results) {
       //session.userData.task = results.response;
