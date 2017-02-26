@@ -29,12 +29,11 @@ bot.dialog('/', intents);
 intents.matches('CancelClass', [
   function (session, results) {
       //session.userData.task = results.response;
-      builder.Prompts.choice(session, "Which class do you want to cancel?");
+      builder.Prompts.text(session, "Which class do you want to cancel?");
   },
   function (session, results) {
       session.userData.toBeCanceled = results.response.entity;
-      builder.Prompts.text(session, "Is this info about the class you want to cancel correct?");
-      builder.Prompts.text(session, session.userData.toBeCanceled);
+      builder.Prompts.text(session, "Is this info about the class you want to cancel correct?"+ ": "+ session.userData.toBeCanceled);
   },
   function (session, results) {
       session.userData.confirmation = results.response;
@@ -94,11 +93,11 @@ intents.matches('BookClass', [
  intents.matches('ViewClass', [
    function (session, results) {
        //session.userData.task = results.response;
-       builder.Prompts.choice(session, "For what date do you want to see the available classes?");
+       builder.Prompts.text(session, "For what date do you want to see the available classes?");
    },
    function (session, results) {
        session.userData.date = results.response.entity;
-       builder.Prompts.text(session, "These are the available classes", ["Pilates", "Spin", "TRX", "Yoga"]);
+       builder.Prompts.text(session, "These are the available classes: Pilates, Spin, TRX, Yoga"]);
    },
    function (session, results) {
        session.userData.confirmation = results.response;
