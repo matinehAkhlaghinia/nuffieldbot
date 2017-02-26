@@ -72,7 +72,7 @@ intents.matches('BookClass', [
   }
 ]);
 
- intents.matches('CancelClass', [
+ /*intents.matches('CancelClass', [
    function (session, results) {
        //session.userData.task = results.response;
        builder.Prompts.choice(session, "Which class do you want to cancel?");
@@ -89,7 +89,7 @@ intents.matches('BookClass', [
        }
        session.endDialogWithResult({ response: session.userData });
    }
- ]);
+ ]);*/
 
  intents.matches('ViewClass', [
    function (session, results) {
