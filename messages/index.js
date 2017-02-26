@@ -24,9 +24,9 @@ var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
 
-bot.dialog('/', intents);
+//bot.dialog('/', intents);
 
-intents.matches('BookClass', [
+bot.dialog('BookClass', [
   function (session, results) {
       //session.userData.task = results.response;
       builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
@@ -51,9 +51,38 @@ intents.matches('BookClass', [
       }
       session.endDialogWithResult({ response: session.userData });
   }
- ]);
+]).triggerAction({
+    matches: 'BookClass'
+});
 
- intents.matches('CancelClass', [
+/*intents.matches('BookClass', [
+  function (session, results) {
+      //session.userData.task = results.response;
+      builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+  },
+  function (session, results) {
+      session.userData.toBeBooked = results.response.entity;
+      builder.Prompts.text(session, "What date?");
+  },
+  function (session, results) {
+      session.userData.date = results.response;
+      builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
+  },
+  function (session, results) {
+      session.userData.time = results.response.entity;
+      builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+      session.userData.date + " " + session.userData.time + "?");
+  },
+  function (session, results) {
+      session.userData.confirmation = results.response;
+      if(session.userData.confirmation == "yes") {
+          session.send("Your booking is confirmed!");
+      }
+      session.endDialogWithResult({ response: session.userData });
+  }
+]);*/
+
+ bot.dialog('CancelClass', [
    function (session, results) {
        //session.userData.task = results.response;
        builder.Prompts.choice(session, "Which class do you want to cancel?");
@@ -70,7 +99,9 @@ intents.matches('BookClass', [
        }
        session.endDialogWithResult({ response: session.userData });
    }
-  ]);
+ ]).triggerAction({
+    matches: 'CancelClass'
+});
 //intents.matches('ViewClass', (session, args) => { ... });
 //intents.matches('Help', builder.DialogAction.send('Hi! Try asking me things like ...'));
 
