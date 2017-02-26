@@ -97,7 +97,7 @@ intents.matches('BookClass', [
    },
    function (session, results) {
        session.userData.date = results.response.entity;
-       builder.Prompts.text(session, "These are the available classes: Pilates, Spin, TRX, Yoga"]);
+       builder.Prompts.text(session, "These are the available classes: Pilates, Spin, TRX, Yoga");
    },
    function (session, results) {
        session.userData.confirmation = results.response;
