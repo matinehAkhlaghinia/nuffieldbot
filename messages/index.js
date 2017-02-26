@@ -23,6 +23,7 @@ const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
+bot.recognizer(recognizer);
 
 //bot.dialog('/', intents);
 
