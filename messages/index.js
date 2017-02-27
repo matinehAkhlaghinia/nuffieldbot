@@ -12,7 +12,7 @@ var useEmulator = (process.env.NODE_ENV == 'development');
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['62f75b05-11a3-4185-b16e-5cde112a27bf'],
-    appPassword: process.env['Matin1374'],
+    appPassword: process.env['gEExYArFEnOz42Po3Rm2NEL'],
     stateEndpoint: process.env['https://NuffieldBot.azurewebsites.net/api/messages?code=CJxOa3qIMcKrhXFsBU/Vu5K9mwD2apsKhJcfQbMgQlrQ0VvethcTFA=='],
     openIdMetadata: process.env['BotOpenIdMetadata']
 });
