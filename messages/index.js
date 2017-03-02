@@ -6,29 +6,21 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 "use strict";
 
 
-// var port = process.env.PORT || 8000; // first change
-//
-// var http = require('http');
-// var express = require('express');
-// var app = express();
-// var server = http.createServer(app);
-// server.listen(port, function () { // fifth and final change
-// });
-
 var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 
 var useEmulator = (process.env.NODE_ENV == 'development');
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
-    // appId: process.env['62f75b05-11a3-4185-b16e-5cde112a27bf'],
-    // appPassword: process.env['gEExYArFEnOz42Po3Rm2NEL'],
-    // stateEndpoint: process.env['https://NuffieldBot.azurewebsites.net/api/messages?code=CJxOa3qIMcKrhXFsBU/Vu5K9mwD2apsKhJcfQbMgQlrQ0VvethcTFA=='],
-    // openIdMetadata: process.env['BotOpenIdMetadata']
+     appId: process.env['62f75b05-11a3-4185-b16e-5cde112a27bf'],
+     appPassword: process.env['gEExYArFEnOz42Po3Rm2NEL'],
+     stateEndpoint: process.env['https://NuffieldBot.azurewebsites.net/api/messages?code=CJxOa3qIMcKrhXFsBU/Vu5K9mwD2apsKhJcfQbMgQlrQ0VvethcTFA=='],
+     openIdMetadata: process.env['BotOpenIdMetadata']
 });
 
-
-const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=4bfee3fdd12e428ba1424426479fc04a'
+//const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
 
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
@@ -151,7 +143,7 @@ intents.matches('CancelClass', [
    }
  ]);
 
-if (useEmulator) {
+if (true) {
     var restify = require('restify');
     var server = restify.createServer();
     server.listen(3978, function() {
