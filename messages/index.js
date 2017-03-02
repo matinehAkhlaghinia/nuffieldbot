@@ -30,34 +30,68 @@ intents.matches('BookClass', [
   function (session, args, next) {
       var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
       var classDate = builder.EntityRecognizer.findEntity(args.entities, 'ClassDate');
-      var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+      var classTime = builder.EntityRecognizer.findEntity(args.entities, 'ClassTime');
       var classInfo = session.dialogData.classInformation = {
         title: className ? className.entity : null,
-        time:  classTime ? classTime.getTime() : null,
+        time:  classTime ? classTime.entity : null,
         date:  classDate ? classDate.entity : null
       };
-      builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+      if(!classInfo.title) {
+        builder.Prompts.text(session, "What is the name of the class you want to book?");
+      }
+      else {
+        next();
+      }
+      //builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
   },
   function (session, results, next) {
-      session.userData.toBeBooked = results.response.entity;
-      builder.Prompts.text(session, "What date?");
+      //session.userData.toBeBooked = results.response.entity;
+      var classInfo = session.dialogData.classInformation;
+      if(results.response) {
+        classInfo.title = results.response;
+      }
+      if(classInfo.title && !classInfo.date) {
+            builder.Prompts.text(session, 'What date would you like to book the class for?');
+      } else {
+            next();
+      }
+      //builder.Prompts.text(session, "What date?");
   },
   function (session, results, next) {
-      session.userData.date = results.response;
-      builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
-  },
-  function (session, results, next) {
-      session.userData.time = results.response.entity;
-      builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
-      session.userData.date + " " + session.userData.time + "?");
+      var classInfo = session.dialogData.classInformation;
+      if(results.response) {
+        var date = builder.EntityRecognizer.findEntity([results.response]);
+        classInfo.date = date ? date.entity : null;
+      }
+
+      if(classInfo.date && !classInfo.time) {
+        builder.Prompts.text("What time would you like to book the class for?");
+      }
+      else {
+        next();
+      }
+      //builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
   },
   function (session, results) {
+      var classInfo = session.dialogData.classInformation;
+      if(results.response) {
+        var time = builder.EntityRecognizer.findEntity([results.response]);
+        classInfo.time = time ? time.entity : null;
+      }
+
+      if(classInfo.title && classInfo.time && classInfo.date) {
+        session.send("Booking "+ classInfo.title + " class at" + classInfo.time + " " + classInfor.date);
+      }
+      // builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+      // session.userData.date + " " + session.userData.time + "?");
+  }
+  /*function (session, results) {
       session.userData.confirmation = results.response;
       if(session.userData.confirmation == "yes") {
           session.send("Your booking is confirmed!");
       }
       session.endDialogWithResult({ response: session.userData });
-  }
+  }*/
 ]);
 
 intents.matches('CancelClass', [
