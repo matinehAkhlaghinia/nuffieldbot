@@ -112,7 +112,7 @@ bot.dialog('/', intents);
       }
       session.endDialogWithResult({ response: session.userData });
   }*/
-]);
+//]);
 
 intents.matches('CancelClass', [
   function (session, results) {
