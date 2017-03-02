@@ -40,6 +40,7 @@ bot.dialog('/', intents);
 intents.matches('BookClass', [
   function (session, args, next) {
       console.log("HEY CAME HERE");
+      session.send("OK!!!!");
       // var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
       // var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
       // var classTime = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassTime');
