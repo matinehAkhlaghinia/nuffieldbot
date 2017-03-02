@@ -1,5 +1,6 @@
 {
   "disabled": false,
+  "scriptFile": "src/test.js",
   "bindings": [
     {
       "authLevel": "function",
@@ -11,6 +12,6 @@
       "type": "http",
       "direction": "out",
       "name": "res"
-    }
+    },
   ]
 }
