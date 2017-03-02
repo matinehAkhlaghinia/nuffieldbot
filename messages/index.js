@@ -10,7 +10,7 @@ var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-useEmulator = true;
+//useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
      appId: process.env['62f75b05-11a3-4185-b16e-5cde112a27bf'],
@@ -143,7 +143,7 @@ intents.matches('CancelClass', [
    }
  ]);
 
-if (true) {
+if (false) {
     var restify = require('restify');
     var server = restify.createServer();
     server.listen(3978, function() {
