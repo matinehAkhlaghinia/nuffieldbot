@@ -10,7 +10,7 @@ var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
      appId: process.env['62f75b05-11a3-4185-b16e-5cde112a27bf'],
@@ -19,8 +19,8 @@ var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure
      openIdMetadata: process.env['BotOpenIdMetadata']
 });
 
-const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=4bfee3fdd12e428ba1424426479fc04a';
-//const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+//const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
 
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
@@ -30,9 +30,9 @@ var bot = new builder.UniversalBot(connector);
 bot.dialog('/', intents);
 
 
-intents.matches('BookClass', session.send('Booking a class'));
-intents.matches('ViewClass', session.Prompts.send('Viewing classes'));
-intents.onDefault(session.send("I'm sorry I didn't understand. I can only create & delete alarms."));
+intents.matches('BookClass', builder.DialogAction.send('Booking a class'));
+intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
+intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
 // intents.matches('BookClass', [
 //   function (session, args, next) {
@@ -148,13 +148,13 @@ intents.onDefault(session.send("I'm sorry I didn't understand. I can only create
 //    }
 //  ]);
 //
-// if (false) {
-//     var restify = require('restify');
-//     var server = restify.createServer();
-//     server.listen(3978, function() {
-//         console.log('test bot endpont at http://localhost:3978/api/messages');
-//     });
-//     server.post('/api/messages', connector.listen());
-// } else {
-//     module.exports = { default: connector.listen() }
-// }
+if (true) {
+    var restify = require('restify');
+    var server = restify.createServer();
+    server.listen(3978, function() {
+        console.log('test bot endpont at http://localhost:3978/api/messages');
+    });
+    server.post('/api/messages', connector.listen());
+} else {
+    module.exports = { default: connector.listen() }
+}
