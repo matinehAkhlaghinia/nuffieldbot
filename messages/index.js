@@ -30,13 +30,13 @@ var bot = new builder.UniversalBot(connector);
 bot.dialog('/', intents);
 
 
-intents.matches('BookClass', builder.DialogAction.send('Booking a class'));
-intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
-intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
+// intents.matches('BookClass', console.log("HEYYY"));
+// intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
+// intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
-// intents.matches('BookClass', [
-//   function (session, args, next) {
-//       console.log("HEY CAME HERE");
+intents.matches('BookClass', [
+  function (session, args, next) {
+         console.log("HEY CAME HERE");
 //       session.send("OK!!!!");
 //       // var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
 //       // var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
@@ -56,9 +56,9 @@ intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I ca
 //       //   console.log("HEY CAME HERE3");
 //       //   next();
 //       // }
-//       //builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
-//   },
-//   function (session, results, next) {
+         builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+   },
+   function (session, results, next) {
 //       //session.userData.toBeBooked = results.response.entity;
 //       var classInfo = session.dialogData.classInformation;
 //       if(results.response) {
@@ -69,9 +69,9 @@ intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I ca
 //       } else {
 //             next();
 //       }
-//       //builder.Prompts.text(session, "What date?");
-//   },
-//   function (session, results, next) {
+       builder.Prompts.text(session, "What date?");
+     },
+     function (session, results, next) {
 //       var classInfo = session.dialogData.classInformation;
 //       if(results.response) {
 //         var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
@@ -84,9 +84,9 @@ intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I ca
 //       else {
 //         next();
 //       }
-//       //builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
-//   },
-//   function (session, results) {
+       builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
+     },
+     function (session, results) {
 //       var classInfo = session.dialogData.classInformation;
 //       if(results.response) {
 //         var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
@@ -99,9 +99,9 @@ intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I ca
 //       else {
 //         session.send("OK...Is there anything else you want to do?");
 //       }
-//       // builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
-//       // session.userData.date + " " + session.userData.time + "?");
-//   }
+         builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+         session.userData.date + " " + session.userData.time + "?");
+     }
   /*function (session, results) {
       session.userData.confirmation = results.response;
       if(session.userData.confirmation == "yes") {
@@ -109,7 +109,7 @@ intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I ca
       }
       session.endDialogWithResult({ response: session.userData });
   }*/
-//]);
+]);
 
 // intents.matches('CancelClass', [
 //   function (session, results) {
