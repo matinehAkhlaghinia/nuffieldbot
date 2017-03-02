@@ -30,9 +30,9 @@ var bot = new builder.UniversalBot(connector);
 bot.dialog('/', intents);
 
 
-intents.matches('BookClass', builder.DialogAction.send('Booking a class'));
-intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
-intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
+intents.matches('BookClass', session.send('Booking a class'));
+intents.matches('ViewClass', session.Prompts.send('Viewing classes'));
+intents.onDefault(session.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
 // intents.matches('BookClass', [
 //   function (session, args, next) {
