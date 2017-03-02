@@ -35,8 +35,9 @@ bot.dialog('/', intents);
 // intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
 intents.matches('BookClass', [
-  function (session, args, next) {
+  function (session, next) {
          console.log("HEY CAME HERE");
+         session.send('Welcome to Nuffield Health Centre gym booking system!!!');
 //       session.send("OK!!!!");
 //       // var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
 //       // var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
@@ -57,8 +58,8 @@ intents.matches('BookClass', [
 //       //   next();
 //       // }
          builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
-   },
-   function (session, results, next) {
+   }
+//   function (session, results, next) {
 //       //session.userData.toBeBooked = results.response.entity;
 //       var classInfo = session.dialogData.classInformation;
 //       if(results.response) {
@@ -69,9 +70,9 @@ intents.matches('BookClass', [
 //       } else {
 //             next();
 //       }
-       builder.Prompts.text(session, "What date?");
-     },
-     function (session, results, next) {
+//       builder.Prompts.text(session, "What date?");
+//     },
+//     function (session, results, next) {
 //       var classInfo = session.dialogData.classInformation;
 //       if(results.response) {
 //         var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
@@ -84,9 +85,9 @@ intents.matches('BookClass', [
 //       else {
 //         next();
 //       }
-       builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
-     },
-     function (session, results) {
+//       builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
+//     },
+//     function (session, results) {
 //       var classInfo = session.dialogData.classInformation;
 //       if(results.response) {
 //         var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
@@ -99,9 +100,9 @@ intents.matches('BookClass', [
 //       else {
 //         session.send("OK...Is there anything else you want to do?");
 //       }
-         builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
-         session.userData.date + " " + session.userData.time + "?");
-     }
+//         builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
+//         session.userData.date + " " + session.userData.time + "?");
+//   }
   /*function (session, results) {
       session.userData.confirmation = results.response;
       if(session.userData.confirmation == "yes") {
