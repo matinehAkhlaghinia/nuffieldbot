@@ -40,7 +40,7 @@ intents.matches('BookClass', [
         builder.Prompts.text(session, "What is the name of the class you want to book?");
       }
       else {
-        next();
+        next({ response: classInfo.title});
       }
       //builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
   },
@@ -60,7 +60,7 @@ intents.matches('BookClass', [
   function (session, results, next) {
       var classInfo = session.dialogData.classInformation;
       if(results.response) {
-        var date = builder.EntityRecognizer.findEntity([results.response], 'ClassDate');
+        var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
         classInfo.date = date ? date.entity : null;
       }
 
@@ -75,7 +75,7 @@ intents.matches('BookClass', [
   function (session, results) {
       var classInfo = session.dialogData.classInformation;
       if(results.response) {
-        var time = builder.EntityRecognizer.findEntity([results.response], 'ClassTime');
+        var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
         classInfo.time = time ? time.entity : null;
       }
 
