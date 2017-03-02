@@ -40,24 +40,24 @@ bot.dialog('/', intents);
 intents.matches('BookClass', [
   function (session, args, next) {
       console.log("HEY CAME HERE");
-      var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
-      var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
-      var classTime = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassTime');
-      console.log(className);
-      var classInfo = session.dialogData.classInformation = {
-        title: className ? className.entity : null,
-        time:  classTime ? classTime.entity : null,
-        date:  classDate ? classDate.entity : null
-      };
-      console.log("HEY CAME HERE1");
-      if(!classInfo.title) {
-        console.log("HEY CAME HERE2");
-        builder.Prompts.text(session, "What is the name of the class you want to book?");
-      }
-      else {
-        console.log("HEY CAME HERE3");
-        next();
-      }
+      // var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
+      // var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
+      // var classTime = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassTime');
+      // console.log(className);
+      // var classInfo = session.dialogData.classInformation = {
+      //   title: className ? className.entity : null,
+      //   time:  classTime ? classTime.entity : null,
+      //   date:  classDate ? classDate.entity : null
+      // };
+      // console.log("HEY CAME HERE1");
+      // if(!classInfo.title) {
+      //   console.log("HEY CAME HERE2");
+      //   builder.Prompts.text(session, "What is the name of the class you want to book?");
+      // }
+      // else {
+      //   console.log("HEY CAME HERE3");
+      //   next();
+      // }
       //builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
   },
   function (session, results, next) {
