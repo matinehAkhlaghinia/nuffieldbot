@@ -37,100 +37,102 @@ var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', intents);
 
-intents.matches('BookClass', [
-    function (session, args, next) {
-        var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
-        //var task = builder.EntityRecognizer.findEntity(args.entities, 'TaskTitle');
-        if (!className) {
-            builder.Prompts.text(session, "What is the class name?");
-        } else {
-            next({ response: className.entity });
-        }
-    },
-    function (session, results) {
-        if (results.response) {
-            // ... save task
-            session.send("Ok... Added the '%s' task.", results.response);
-        } else {
-            session.send("Ok");
-        }
-    }
-]);
+// intents.matches('BookClass', [
+//     function (session, args, next) {
+//         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+//         //var task = builder.EntityRecognizer.findEntity(args.entities, 'TaskTitle');
+//         if (!className) {
+//             builder.Prompts.text(session, "What is the class name?");
+//         } else {
+//             next({ response: className.entity });
+//         }
+//     },
+//     function (session, results) {
+//         if (results.response) {
+//             // ... save task
+//             session.send("Ok... Added the '%s' task.", results.response);
+//         } else {
+//             session.send("Ok");
+//         }
+//     }
+// ]);
 
 
 // intents.matches('BookClass', console.log("HEYYY"));
 // intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
 // intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
-// intents.matches('BookClass', [
-//   function (session) {
-//          console.log("HEY CAME HERE");
-//          session.send('Welcome to Nuffield Health Centre gym booking system!!!');
-//       session.send("OK!!!!");
-//       // var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
-//       // var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
-//       // var classTime = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassTime');
-//       // console.log(className);
-//       // var classInfo = session.dialogData.classInformation = {
-//       //   title: className ? className.entity : null,
-//       //   time:  classTime ? classTime.entity : null,
-//       //   date:  classDate ? classDate.entity : null
-//       // };
-//       // console.log("HEY CAME HERE1");
-//       // if(!classInfo.title) {
-//       //   console.log("HEY CAME HERE2");
-//       //   builder.Prompts.text(session, "What is the name of the class you want to book?");
-//       // }
-//       // else {
-//       //   console.log("HEY CAME HERE3");
-//       //   next();
-//       // }
-//         builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
-// }
-//   function (session, results, next) {
-//       //session.userData.toBeBooked = results.response.entity;
-//       var classInfo = session.dialogData.classInformation;
-//       if(results.response) {
-//         classInfo.title = results.response;
-//       }
-//       if(classInfo.title && !classInfo.date) {
-//             builder.Prompts.text(session, 'What date would you like to book the class for?');
-//       } else {
-//             next();
-//       }
-//       builder.Prompts.text(session, "What date?");
-//     },
-//     function (session, results, next) {
-//       var classInfo = session.dialogData.classInformation;
-//       if(results.response) {
-//         var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
-//         classInfo.date = date ? date.entity : null;
-//       }
-//
-//       if(classInfo.date && !classInfo.time) {
-//         builder.Prompts.text("What time would you like to book the class for?");
-//       }
-//       else {
-//         next();
-//       }
+ intents.matches('BookClass', [
+   function (session, args, next) {
+
+        var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+        var classDate = builder.EntityRecognizer.findEntity(args.entities, 'ClassDate');
+        var classTime = builder.EntityRecognizer.findEntity(args.entities, 'ClassTime');
+        console.log(className.entity);
+        var classInfo = session.dialogData.classInformation = {
+          title: className ? className.entity : null,
+          time:  classTime ? classTime.entity : null,
+          date:  classDate ? classDate.entity : null
+        };
+        if(!classInfo.title) {
+          builder.Prompts.text(session, "What is the name of the class you want to book?");
+        }
+        else {
+          next();
+        }
+        //builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+     },
+
+   function (session, results, next) {
+        //session.userData.toBeBooked = results.response.entity;
+        var classInfo = session.dialogData.classInformation;
+        if(results.response) {
+           console.log(results.response);
+           classInfo.title = results.response;
+        }
+        console.log("YOLO");
+        console.log(classInfo.date);
+        if(classInfo.title && !classInfo.date) {
+           builder.Prompts.text(session, 'What date would you like to book the class for?');
+        } else {
+           next();
+        }
+        //builder.Prompts.text(session, "What date?");
+    },
+    function (session, results, next) {
+        var classInfo = session.dialogData.classInformation;
+
+        if(results.response) {
+            var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
+            classInfo.date = date ? date.entity : null;
+        }
+        if(classInfo.date && !classInfo.time) {
+           builder.Prompts.text("What time would you like to book the class for?");
+        }
+        else {
+           next();
+        }
 //       builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
-//     },
-//     function (session, results) {
-//       var classInfo = session.dialogData.classInformation;
-//       if(results.response) {
-//         var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
-//         classInfo.time = time ? time.entity : null;
-//       }
-//
-//       if(classInfo.title && classInfo.time && classInfo.date) {
-//         session.send("Booking "+ classInfo.title + " class at" + classInfo.time + " " + classInfor.date);
-//       }
-//       else {
-//         session.send("OK...Is there anything else you want to do?");
-//       }
+       },
+    function (session, results) {
+        var classInfo = session.dialogData.classInformation;
+        if(results.response) {
+            var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
+            classInfo.time = time ? time.entity : null;
+        }
+
+        if(classInfo.title && classInfo.time && classInfo.date) {
+            console.log("I have all the data i need!!!");
+            session.send("Booking "+ classInfo.title + " class at" + classInfo.time + " " + classInfo.date);
+        }
+        else {
+            console.log("um where is the data???????");
+            session.send("OK...Is there anything else you want to do?");
+         }
 //         builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
 //         session.userData.date + " " + session.userData.time + "?");
-//   }
+        session.endDialogWithResult({ response: session.dialogData });
+    }
   /*function (session, results) {
       session.userData.confirmation = results.response;
       if(session.userData.confirmation == "yes") {
@@ -138,7 +140,7 @@ intents.matches('BookClass', [
       }
       session.endDialogWithResult({ response: session.userData });
   }*/
-//]);
+]);
 
 // intents.matches('CancelClass', [
 //   function (session, results) {
