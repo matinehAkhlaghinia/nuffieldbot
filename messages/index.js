@@ -10,7 +10,7 @@ var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
      appId: process.env['62f75b05-11a3-4185-b16e-5cde112a27bf'],
@@ -29,15 +29,35 @@ var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', intents);
 
+intents.matches('BookClass', [
+    function (session, args, next) {
+        var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+        //var task = builder.EntityRecognizer.findEntity(args.entities, 'TaskTitle');
+        if (!className) {
+            builder.Prompts.text(session, "What is the class name?");
+        } else {
+            next({ response: className.entity });
+        }
+    },
+    function (session, results) {
+        if (results.response) {
+            // ... save task
+            session.send("Ok... Added the '%s' task.", results.response);
+        } else {
+            session.send("Ok");
+        }
+    }
+]);
+
 
 // intents.matches('BookClass', console.log("HEYYY"));
 // intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
 // intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
-intents.matches('BookClass', [
-  function (session) {
-         console.log("HEY CAME HERE");
-         session.send('Welcome to Nuffield Health Centre gym booking system!!!');
+// intents.matches('BookClass', [
+//   function (session) {
+//          console.log("HEY CAME HERE");
+//          session.send('Welcome to Nuffield Health Centre gym booking system!!!');
 //       session.send("OK!!!!");
 //       // var className = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassName');
 //       // var classDate = builder.EntityRecognizer.findEntity(args.intent.entities, 'ClassDate');
@@ -57,8 +77,8 @@ intents.matches('BookClass', [
 //       //   console.log("HEY CAME HERE3");
 //       //   next();
 //       // }
-         builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
-   }
+//         builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
+// }
 //   function (session, results, next) {
 //       //session.userData.toBeBooked = results.response.entity;
 //       var classInfo = session.dialogData.classInformation;
@@ -110,7 +130,7 @@ intents.matches('BookClass', [
       }
       session.endDialogWithResult({ response: session.userData });
   }*/
-]);
+//]);
 
 // intents.matches('CancelClass', [
 //   function (session, results) {
@@ -149,13 +169,13 @@ intents.matches('BookClass', [
 //    }
 //  ]);
 //
-// if (true) {
-//     var restify = require('restify');
-//     var server = restify.createServer();
-//     server.listen(3978, function() {
-//         console.log('test bot endpont at http://localhost:3978/api/messages');
-//     });
-//     server.post('/api/messages', connector.listen());
-// } else {
-//     module.exports = { default: connector.listen() }
-// }
+if (true) {
+    var restify = require('restify');
+    var server = restify.createServer();
+    server.listen(3978, function() {
+        console.log('test bot endpont at http://localhost:3978/api/messages');
+    });
+    server.post('/api/messages', connector.listen());
+} else {
+    module.exports = { default: connector.listen() }
+}
