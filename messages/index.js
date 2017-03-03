@@ -37,30 +37,6 @@ var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', intents);
 
-// intents.matches('BookClass', [
-//     function (session, args, next) {
-//         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
-//         //var task = builder.EntityRecognizer.findEntity(args.entities, 'TaskTitle');
-//         if (!className) {
-//             builder.Prompts.text(session, "What is the class name?");
-//         } else {
-//             next({ response: className.entity });
-//         }
-//     },
-//     function (session, results) {
-//         if (results.response) {
-//             // ... save task
-//             session.send("Ok... Added the '%s' task.", results.response);
-//         } else {
-//             session.send("Ok");
-//         }
-//     }
-// ]);
-
-
-// intents.matches('BookClass', console.log("HEYYY"));
-// intents.matches('ViewClass', builder.DialogAction.send('Viewing classes'));
-// intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
  intents.matches('BookClass', [
    function (session, args, next) {
