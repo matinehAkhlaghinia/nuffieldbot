@@ -1,6 +1,6 @@
 {
   "disabled": false,
-  //"scriptFile": "src/test.js",
+  "scriptFile": "messages/index.js",
   "bindings": [
     {
       "authLevel": "function",
