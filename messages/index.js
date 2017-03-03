@@ -35,7 +35,7 @@ bot.dialog('/', intents);
 // intents.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
 intents.matches('BookClass', [
-  function (session, next) {
+  function (session) {
          console.log("HEY CAME HERE");
          session.send('Welcome to Nuffield Health Centre gym booking system!!!');
 //       session.send("OK!!!!");
