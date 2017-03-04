@@ -30,10 +30,11 @@ intents.matches('BookClass', [
 
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+        session.send("It will be on "+ classTime);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
           time:  classTime ? classTime.getTime() : null,
-          date:  classDate ? classTime.getDate() : null
+          date:  classTime ? classTime.getDate() : null
         };
         if(!classInfo.title) {
           builder.Prompts.text(session, "What is the name of the class you want to book?");
