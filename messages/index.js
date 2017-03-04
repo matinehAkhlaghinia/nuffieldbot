@@ -63,10 +63,10 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
 
         if(results.response) {
-            //var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
-            //classInfo.date = date ? date.entity : null;
-            classInfo.date = results.response;
+            var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
+            classInfo.date = date ? date.entity : null;
         }
+        session.send("the date will be "+ classInfo.date);
         if(classInfo.date && !classInfo.time) {
            builder.Prompts.text("What time would you like to book the class for?");
         }
