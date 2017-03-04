@@ -65,6 +65,7 @@ intents.matches('BookClass', [
 
         if(results.response) {
             var date = builder.EntityRecognizer.resolveTime([results.response]);
+            session.send("the date issss " + date);
             date = new Date(date);
             classInfo.date = date ? date.getDate() : null;
         }
