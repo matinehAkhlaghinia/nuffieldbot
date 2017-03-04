@@ -72,7 +72,6 @@ intents.matches('BookClass', [
         else {
            next();
         }
-//       builder.Prompts.choice(session, "What time do you want to take your class?",["10-12","2:30-4:30","5:30-7:30"]);
        },
     function (session, results) {
         var classInfo = session.dialogData.classInformation;
@@ -82,24 +81,13 @@ intents.matches('BookClass', [
         }
 
         if(classInfo.title && classInfo.time && classInfo.date) {
-            console.log("I have all the data i need!!!");
             session.send("Booking "+ classInfo.title + " class at" + classInfo.time + " " + classInfo.date);
         }
         else {
-            console.log("um where is the data???????");
             session.send("OK...Is there anything else you want to do?");
          }
-//         builder.Prompts.text(session, "So..you want to book a " + session.userData.toBeBooked + " class, which is on " +
-//         session.userData.date + " " + session.userData.time + "?");
         session.endDialogWithResult({ response: session.dialogData });
     }
-  /*function (session, results) {
-      session.userData.confirmation = results.response;
-      if(session.userData.confirmation == "yes") {
-          session.send("Your booking is confirmed!");
-      }
-      session.endDialogWithResult({ response: session.userData });
-  }*/
 ]);
 
 
