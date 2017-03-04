@@ -63,8 +63,9 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
 
         if(results.response) {
-            var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
-            classInfo.date = date ? date.entity : null;
+            //var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
+            //classInfo.date = date ? date.entity : null;
+            classInfo.date = results.response;
         }
         if(classInfo.date && !classInfo.time) {
            builder.Prompts.text("What time would you like to book the class for?");
@@ -72,12 +73,13 @@ intents.matches('BookClass', [
         else {
            next();
         }
-       },
+    },
     function (session, results) {
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
-            var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
-            classInfo.time = time ? time.entity : null;
+            //var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
+            //classInfo.time = time ? time.entity : null;
+            classInfo.time = results.response;
         }
 
         if(classInfo.title && classInfo.time && classInfo.date) {
