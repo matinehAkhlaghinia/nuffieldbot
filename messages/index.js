@@ -29,12 +29,11 @@ intents.matches('BookClass', [
    function (session, args, next) {
 
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
-        var classDate = builder.EntityRecognizer.findEntity(args.entities, 'ClassDate');
-        var classTime = builder.EntityRecognizer.findEntity(args.entities, 'ClassTime');
+        var classTime = builder.EntityRecognizer.resolveTime(args.entities);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
-          time:  classTime ? classTime.entity : null,
-          date:  classDate ? classDate.entity : null
+          time:  classTime ? classTime.getTime() : null,
+          date:  classDate ? classTime.getDate() : null
         };
         if(!classInfo.title) {
           builder.Prompts.text(session, "What is the name of the class you want to book?");
@@ -63,10 +62,9 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
 
         if(results.response) {
-            var date = builder.EntityRecognizer.findEntity(results.response, 'ClassDate');
-            classInfo.date = date ? date.entity : null;
+            var date = builder.EntityRecognizer.resolveTime([results.response]);
+            classInfo.date = date ? date.getDate() : null;
         }
-        session.send("the date will be "+ classInfo.date);
         if(classInfo.date && !classInfo.time) {
            builder.Prompts.text("What time would you like to book the class for?");
         }
@@ -77,9 +75,9 @@ intents.matches('BookClass', [
     function (session, results) {
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
-            //var time = builder.EntityRecognizer.findEntity(results.response, 'ClassTime');
-            //classInfo.time = time ? time.entity : null;
-            classInfo.time = results.response;
+            var time = builder.EntityRecognizer.resolveTime([results.response]);
+            classInfo.time = time ? time.getTime() : null;
+            //classInfo.time = results.response;
         }
 
         if(classInfo.title && classInfo.time && classInfo.date) {
