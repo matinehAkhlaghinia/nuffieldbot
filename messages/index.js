@@ -31,7 +31,6 @@ intents.matches('BookClass', [
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
         var classDate = new Date(classTime);
-        session.send("It will be on "+ classTime);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
           time:  classTime ? classTime.getTime() : null,
@@ -62,7 +61,7 @@ intents.matches('BookClass', [
     },
     function (session, results, next) {
         var classInfo = session.dialogData.classInformation;
-
+        session.send("The response was"+ results.response);
         if(results.response) {
             var date = builder.EntityRecognizer.resolveTime([results.response]);
             session.send("the date issss " + date);
