@@ -27,9 +27,9 @@ bot.dialog('/', intents);
 
 intents.matches('BookClass', [
    function (session, args, next) {
-
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+        session.send("the recognized time is "+ classTime);
         var classDate = new Date(classTime);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
