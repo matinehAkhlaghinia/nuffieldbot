@@ -31,7 +31,7 @@ intents.matches('BookClass', [
         //var classDate = builder.EntityRecognizer.findEntity(args.entities, 'ClassDate');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
         session.send("the recognized time is "+ classTime);
-        session.send("the recognized time is "+ classDate);
+        //session.send("the recognized time is "+ classDate);
 
         var classDate = new Date(classTime);
         var classInfo = session.dialogData.classInformation = {
