@@ -97,6 +97,15 @@ intents.matches('BookClass', [
     }
 ]);
 
+intents.matches('ViewMyClasses', [
+  function (session, results) {
+      //session.userData.task = results.response;
+      builder.Prompts.text(session, "Here comes the classes you have booked?");
+  },
+  function (session, results) {
+      session.send("What else do u want to do?");
+  }
+]);
 
 if (useEmulator) {
     var restify = require('restify');
