@@ -5,9 +5,11 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 -----------------------------------------------------------------------------*/
 "use strict";
 var builder = require("botbuilder");
+var request = require('request');
 var botbuilder_azure = require("botbuilder-azure");
 
 var useEmulator = (process.env.NODE_ENV == 'development');
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -28,15 +30,11 @@ bot.dialog('/', intents);
 intents.matches('BookClass', [
    function (session, args, next) {
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
-        //var classDate = builder.EntityRecognizer.findEntity(args.entities, 'ClassDate');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
-        session.send("the recognized time is "+ classTime);
-        //session.send("the recognized time is "+ classDate);
-
         var classDate = new Date(classTime);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
-          time:  classTime ? classTime.getTime() : null,
+          //time:  classTime ? classTime.getTime() : null,
           date:  classDate ? classDate.getDate() : null
         };
         if(!classInfo.title) {
@@ -45,7 +43,6 @@ intents.matches('BookClass', [
         else {
           next();
         }
-        //builder.Prompts.choice(session, "What classes do you want to book?",["Pilates", "Spin", "TRX", "Yoga"]);
      },
 
    function (session, results, next) {
@@ -56,39 +53,44 @@ intents.matches('BookClass', [
            classInfo.title = results.response;
         }
         if(classInfo.title && !classInfo.date) {
-           builder.Prompts.text(session, 'What date would you like to book the class for?');
+           builder.Prompts.time(session, 'What date would you like to book the class for?');
         } else {
            next();
         }
-        //builder.Prompts.text(session, "What date?");
     },
-    function (session, results, next) {
-        var classInfo = session.dialogData.classInformation;
-        session.send("The response was"+ results.response);
-        if(results.response) {
-            var date = builder.EntityRecognizer.resolveTime([results.response]);
-            session.send("the date issss " + date);
-            date = new Date(date);
-            classInfo.date = date ? date.getDate() : null;
-        }
-        session.send("The date is "+ classInfo.date);
-        if(classInfo.date && !classInfo.time) {
-           builder.Prompts.text("What time would you like to book the class for?");
-        }
-        else {
-           next();
-        }
-    },
+    // function (session, results, next) {
+    //     var classInfo = session.dialogData.classInformation;
+    //     //session.send("The response was"+ results.response);
+    //     if(results.response) {
+    //         console.log(results.response);
+    //         var date = builder.EntityRecognizer.resolveTime([results.response]);
+    //         //session.send("the date issss " + date);
+    //         console.log(date);
+    //         date = new Date(date);
+    //         classInfo.date = date ? date.getDate() : null;
+    //     }
+    //     session.send("The date is "+ classInfo.date);
+    //     if(classInfo.date && !classInfo.time) {
+    //        builder.Prompts.text("What time would you like to book the class for?");
+    //     }
+    //     else {
+    //        next();
+    //     }
+    //},
     function (session, results) {
         var classInfo = session.dialogData.classInformation;
-        if(results.response) {
-            var time = builder.EntityRecognizer.resolveTime([results.response]);
-            classInfo.time = time ? time.getTime() : null;
-            //classInfo.time = results.response;
-        }
-
-        if(classInfo.title && classInfo.time && classInfo.date) {
-            session.send("Booking "+ classInfo.title + " class at" + classInfo.time + " " + classInfo.date);
+            if(results.response) {
+                var date = builder.EntityRecognizer.resolveTime([results.response]);
+                date = new Date(date);
+                classInfo.date = date ? date.getDate() : null;
+            }
+        // if(results.response) {
+        //     var time = builder.EntityRecognizer.resolveTime([results.response]);
+        //     classInfo.time = time ? time.getTime() : null;
+        //     //classInfo.time = results.response;
+        // }
+        if(classInfo.title && classInfo.date) {
+            session.send("Booking "+ classInfo.title + " class on " + classInfo.date);
         }
         else {
             session.send("OK...Is there anything else you want to do?");
@@ -97,14 +99,52 @@ intents.matches('BookClass', [
     }
 ]);
 
-intents.matches('ViewMyClasses', [
-  function (session, results) {
-      //session.userData.task = results.response;
-      builder.Prompts.text(session, "Here comes the classes you have booked?");
+intents.matches('ViewClass', [
+  function (session, args, next) {
+    var date = builder.EntityRecognizer.resolveTime(args.entities);
+    date = new Date(date);
+    var classInfo = session.dialogData.classInfo = {
+      date: date ? date.getDate() : null
+    }
+    if(!classInfo.date) {
+      builder.Prompts.time(session, "For what date do you want to view available classes?");
+    }
+    else {
+      next();
+    }
   },
-  function (session, results) {
-      session.send("What else do u want to do?");
+  function(session, results) {
+    var classInfo = session.dialogData.classInfo;
+    if(results.response) {
+      var date = builder.EntityRecognizer.resolveTime([results.response]);
+      date = new Date(date);
+      classInfo.date = date ? date.getDate(): null
+    }
+    if(classInfo.date) {
+      request('http://nuffieldapiwrapper.azurewebsites.net/classes', function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+            console.log(body) // Print the google web page.
+            var classInformation = JSON.parse(body);
+            session.send("These are the available classes: ");
+            for(var i = 0; i < classInformation.length; i++) {
+              session.send("Class Name: " + classInformation[0].ClassName + "\n" +
+              "Class Time: " + classInformation[0].classTime + "\n"+
+              "Duration: " + classInformation[0].Duration + "\n" +
+              "Class Days: " + classInformation[0].classDays
+              );
+              console.log("\n");
+            }
+
+            //session.send(classInformation);
+          }
+      });
+    }
+    else {
+      session.send("Sorry I didn't recognize the class information");
+    }
+    session.endDialogWithResult({ response: session.dialogData });
   }
+
 ]);
 
 if (useEmulator) {
