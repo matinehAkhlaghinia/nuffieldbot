@@ -5,11 +5,11 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 -----------------------------------------------------------------------------*/
 "use strict";
 var builder = require("botbuilder");
-var request = require('request');
+const request = require('request-promise');
 var botbuilder_azure = require("botbuilder-azure");
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -36,6 +36,13 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
 
 bot.dialog('/', intents);
+intents.matches('Introduction', [
+  function (session, args) {
+      session.send("Hi there, I am the Nuffield bot!");
+      session.send("You can view, book, and cancel gym classes through me. What can I do for you today?");
+    }
+]);
+
 
 intents.matches('BookClass', [
    function (session, args, next) {
@@ -204,31 +211,52 @@ intents.matches('ViewClass', [
       classInfo.date = date ? date.getDate(): null
     }
     if(classInfo.date) {
+
+      // var  options = {
+      //   uri: 'http://nuffieldapiwrapper.azurewebsites.net/bookClass',
+      //   method: 'POST',
+      //   body: {
+      //    class_id: '1'
+      //   },
+      //   json: true
+      // }
+      //
+      // request(options)
+      //     .then(function (response) {
+      //       console.log(response.statusCode);
+      //       // Handle the response
+      //     })
+      //     .catch(function (err) {
+      //       console.log(err);
+      //       // Deal with the error
+      // });
       request('http://nuffieldapiwrapper.azurewebsites.net/classes', function (error, response, body) {
           if (!error && response.statusCode == 200) {
             console.log(body); // Print the google web page.
             var classInformation = JSON.parse(body);
             session.send("These are the available classes: ");
-            for(var i = 0; i < classInformation.length; i++) {
-              session.send("Class Name: " + classInformation[0].ClassName + "\n" +
-              "Class Time: " + classInformation[0].classTime + "\n"+
-              "Duration: " + classInformation[0].Duration + "\n" +
-              "Class Days: " + classInformation[0].classDays
-              );
+            // for(var i = 0; i < classInformation.length; i++) {
+            //   session.send("Class Name: " + classInformation[0].ClassName + "\n" +
+            //   "Class Time: " + classInformation[0].classTime + "\n"+
+            //   "Duration: " + classInformation[0].Duration + "\n" +
+            //   "Class Days: " + classInformation[0].classDays
+            //   );
 
-              console.log("\n");
-              // var info = session.availableClassesInfo = []
-              // info.push({key: "Class Name", value: classInformation[0].ClassName });
-              // var selectedCardName = AnimationCardName;
-              // var card = createAnimationCard(session);
-              //
-              // // attach the card to the reply message
-              // var msg = new builder.Message(session).addAttachment(card);
-              // session.send(msg);
-            }
+              //console.log("\n");
+              var info = session.availableClassesInfo = []
+              classInformation[0].classTime = classInformation[0].classTime.replace('.0000000', '');
+              info.push({Class_Name: classInformation[0].ClassName, Class_Time: classInformation[0].classTime, Duration: classInformation[0].Duration, Class_Days: classInformation[0].classDays  });
+              console.log(info[0].Class_Name);
+              var selectedCardName = HeroCardName;
+              var card = createHeroCard(session);
+
+              // attach the card to the reply message
+              var msg = new builder.Message(session).addAttachment(card);
+              session.send(msg);
+           //}
 
             //session.send(classInformation);
-          }
+         }
       });
     }
     else {
@@ -240,20 +268,16 @@ intents.matches('ViewClass', [
 ]);
 
 
-function createSigninCard(session) {
-    return new builder.SigninCard(session)
-        .text('BotFramework Sign-in Card')
-        .button('Sign-in', 'https://login.microsoftonline.com');
-}
-
-
-function createAnimationCard(session) {
-    return new builder.AnimationCard(session)
-        .title('Microsoft Bot Framework')
-        .subtitle('Animation Card')
-        .image(builder.CardImage.create(session, 'https://docs.botframework.com/en-us/images/faq-overview/botframework_overview_july.png'))
-        .media([
-            { url: 'http://i.giphy.com/Ki55RUbOV5njy.gif' }
+function createHeroCard(session) {
+    return new builder.HeroCard(session)
+        .title(session.availableClassesInfo[0]["Class_Name"])
+        .subtitle(session.availableClassesInfo[0]["Duration"])
+        .text(session.availableClassesInfo[0]["Class_Time"] + "\n" +session.availableClassesInfo[0]["Class_Days"])
+        .images([
+            builder.CardImage.create(session, 'https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg')
+        ])
+        .buttons([
+            builder.CardAction.openUrl(session, 'https://www.nuffieldhealth.com/gyms/classes/yoga', 'Book your Class')
         ]);
 }
 
