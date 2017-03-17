@@ -5,8 +5,9 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 -----------------------------------------------------------------------------*/
 "use strict";
 var builder = require("botbuilder");
-const request = require('request-promise');
 var botbuilder_azure = require("botbuilder-azure");
+var http = require('http');
+var request = require('request');
 
 var useEmulator = (process.env.NODE_ENV == 'development');
 useEmulator = true;
@@ -230,11 +231,35 @@ intents.matches('ViewClass', [
       //       console.log(err);
       //       // Deal with the error
       // });
+      // var options = {
+      //   host: 'http://nuffieldapiwrapper.azurewebsites.net',
+      //   path: '/classes'
+      // };
+      // http.get(options, function(resp){
+      //   resp.on('data', function(chunk){
+      //     console.log(chunk);
+      //     var classInformation = JSON.parse(chunk);
+      //     session.send("These are the available classes: ");
+      //     var info = session.availableClassesInfo = []
+      //     classInformation[0].classTime = classInformation[0].classTime.replace('.0000000', '');
+      //     info.push({Class_Name: classInformation[0].ClassName, Class_Time: classInformation[0].classTime, Duration: classInformation[0].Duration, Class_Days: classInformation[0].classDays  });
+      //     console.log(info[0].Class_Name);
+      //     var selectedCardName = HeroCardName;
+      //     var card = createHeroCard(session);
+      //
+      //     // attach the card to the reply message
+      //     var msg = new builder.Message(session).addAttachment(card);
+      //     session.send(msg);
+      //     //do something with chunk
+      //   });
+      // }).on("error", function(e){
+      //   console.log("Got error: " + e.message);
+      // });
       request('http://nuffieldapiwrapper.azurewebsites.net/classes', function (error, response, body) {
           if (!error && response.statusCode == 200) {
             console.log(body); // Print the google web page.
             var classInformation = JSON.parse(body);
-            session.send("These are the available classes: ");
+            // session.send("These are the available classes: ");
             // for(var i = 0; i < classInformation.length; i++) {
             //   session.send("Class Name: " + classInformation[0].ClassName + "\n" +
             //   "Class Time: " + classInformation[0].classTime + "\n"+
