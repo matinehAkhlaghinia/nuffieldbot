@@ -10,7 +10,7 @@ var http = require('http');
 var request = require('request');
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -108,7 +108,25 @@ intents.matches('BookClass', [
         //     //classInfo.time = results.response;
         // }
         if(classInfo.title && classInfo.date) {
-            session.send("Booking "+ classInfo.title + " class on " + classInfo.date);
+            session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
+            request({
+                url: 'http://nuffieldhealth.azurewebsites.net/book_class', //URL to hit
+                method: 'POST',
+                //Lets post the following key/values as form
+                json: {
+                    userID: '1',
+                    classID: '2',
+                    class_name: "'"+classInfo.title+"'",
+                    classDate: "'"+classInfo.date+"'"
+                }
+            }, function(error, response, body){
+                if(error) {
+                    console.log(error);
+                } else {
+                    console.log(response.statusCode, body);
+                    session.send("Your class is successfully booked!");
+            }
+            });
         }
         else {
             session.send("OK...Is there anything else you want to do?");
