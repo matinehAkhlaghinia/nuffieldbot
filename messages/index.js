@@ -296,6 +296,21 @@ intents.matches('ViewClass', [
               // attach the card to the reply message
               var msg = new builder.Message(session).addAttachment(card);
               session.send(msg);
+
+              //**********THIS IS THE BIT FOR THE CAROUSELS********
+              
+               // var cards = getCardsAttachments();
+
+               //  // create reply with Carousel AttachmentLayout
+               //  var reply = new builder.Message(session)
+               //      .attachmentLayout(builder.AttachmentLayout.carousel)
+               //      .attachments(cards);
+
+               //  session.send(reply);
+
+               //********************TILL HERE*********************
+
+
            //}
 
             //session.send(classInformation);
@@ -309,6 +324,32 @@ intents.matches('ViewClass', [
   }
 
 ]);
+
+function getCardsAttachments(session) {
+    return [
+        new builder.HeroCard(session)
+            .title('Class 1')
+            .subtitle('Test for carousel')
+            .text('Test for carousel')
+            .images([
+                builder.CardImage.create(session, 'https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg')
+            ])
+            .buttons([
+                builder.CardAction.openUrl(session, 'https://www.nuffieldhealth.com/gyms/classes/yoga', 'Book')
+            ]),
+
+        new builder.HeroCard(session)
+            .title('Class 1')
+            .subtitle('Test for carousel')
+            .text('Test for carousel')
+            .images([
+                builder.CardImage.create(session, 'https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg')
+            ])
+            .buttons([
+                builder.CardAction.openUrl(session, 'https://www.nuffieldhealth.com/gyms/classes/yoga', 'Book')
+            ]),
+    ];
+}
 
 
 function createReceiptCard(session) {
