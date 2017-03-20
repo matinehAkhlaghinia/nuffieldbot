@@ -290,8 +290,8 @@ intents.matches('ViewClass', [
               classInformation[0].classTime = classInformation[0].classTime.replace('.0000000', '');
               info.push({Class_Name: classInformation[0].ClassName, Class_Time: classInformation[0].classTime, Duration: classInformation[0].Duration, Class_Days: classInformation[0].classDays  });
               console.log(info[0].Class_Name);
-              var selectedCardName = ReceiptCardName;
-              var card = createReceiptCard(session);
+              var selectedCardName = HeroCardName;
+              var card = createHeroCard(session);
 
               // attach the card to the reply message
               var msg = new builder.Message(session).addAttachment(card);
@@ -310,31 +310,6 @@ intents.matches('ViewClass', [
 
 ]);
 
-function createReceiptCard(session) {
-    
-    return new builder.ReceiptCard(session)
-        .title(session.availableClassesInfo[0]["Class_Name"])
-        // .facts([
-        //     builder.Fact.create(session, 'VISA 5555-****', 'Payment Method')
-        // ])
-        .items([
-            builder.ReceiptItem.create(session, session.availableClassesInfo[0]["Class_Time"], 'Class Time: ')
-                .quantity(368)
-                .image(builder.CardImage.create(session, 'http://www.pngall.com/wp-content/uploads/2016/07/Time-PNG-HD.png')),
-            builder.ReceiptItem.create(session, session.availableClassesInfo[0]["Duration"], 'Total Tine: ')
-                .quantity(368)
-                .image(builder.CardImage.create(session, 'https://cdn2.iconfinder.com/data/icons/finance-solid-icons-vol-3/48/146-512.png')),
-            builder.ReceiptItem.create(session, session.availableClassesInfo[0]["Class_Days"], 'Days: ')
-                .quantity(368)
-                .image(builder.CardImage.create(session, 'http://www.pngall.com/wp-content/uploads/2016/10/Calendar-PNG-File.png'))
-        ])
-        // .tax('$ 7.50')
-        // .total('$ 90.95')
-        .buttons([
-            builder.CardAction.openUrl(session, 'https://www.nuffieldhealth.com/gyms/classes/yoga', 'Book Class')
-                .image('https://raw.githubusercontent.com/amido/azure-vector-icons/master/renders/microsoft-azure.png')
-        ]);
-}
 
 
 function createHeroCard(session) {
