@@ -44,6 +44,13 @@ intents.matches('Introduction', [
     }
 ]);
 
+intents.matches('reset', [
+  function (session, args) {
+      session.send("Hi there, I am the Nuffield Health bot!");
+      session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
+    }
+]);
+
 
 intents.matches('BookClass', [
    function (session, args, next) {
