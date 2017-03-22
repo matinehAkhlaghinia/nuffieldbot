@@ -7,6 +7,7 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 var request = require('request');
+var restify = require('restify');
 var server = restify.createServer();
 
 var useEmulator = (process.env.NODE_ENV == 'development');
@@ -385,7 +386,6 @@ server.post('/callback', function(req, res){
 })
 
 if (useEmulator) {
-    var restify = require('restify');
     server.listen(3978, function() {
         console.log('test bot endpont at http://localhost:3978/api/messages');
     });
