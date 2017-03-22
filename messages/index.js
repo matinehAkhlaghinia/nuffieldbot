@@ -6,11 +6,12 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 "use strict";
 var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
-var http = require('http');
 var request = require('request');
+var restify = require('restify');
+var server = restify.createServer();
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -36,7 +37,22 @@ var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
 
+
+// reset the bot
+bot.dialog('reset', function (session) {
+    // reset data
+    session.endConversation("What do you want to do today?");
+});
+
 bot.dialog('/', intents);
+//
+// bot.endConversationAction('reset', 'reset').matches('reset', [
+//     function (session, args) {
+//         session.send("Hi there, I am the Nuffield Health bot!");
+//         session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
+//       }
+// ]);
+
 intents.matches('Introduction', [
   function (session, args) {
       session.send("Hi there, I am the Nuffield Health bot!");
@@ -44,12 +60,12 @@ intents.matches('Introduction', [
     }
 ]);
 
-intents.matches('reset', [
-  function (session, args) {
-      session.send("Hi there, I am the Nuffield Health bot!");
-      session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
-    }
-]);
+// intents.matches('reset', [
+//   function (session, args) {
+//       session.send("Hi there, I am the Nuffield Health bot!");
+//       session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
+//     }
+// ]);
 
 
 intents.matches('BookClass', [
@@ -75,6 +91,9 @@ intents.matches('BookClass', [
 
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
+          //  if(results.response == "reset") {
+          //    session.endConversation();
+          //  }
            classInfo.title = results.response;
         }
         if(classInfo.title && !classInfo.date) {
@@ -132,12 +151,13 @@ intents.matches('BookClass', [
                 } else {
                     console.log(response.statusCode, body);
                     session.send("Your class is successfully booked!");
+                    session.send("OK...Is there anything else you want to do?");
             }
             });
         }
-        else {
-            session.send("OK...Is there anything else you want to do?");
-         }
+        // else {
+        //     session.send("OK...Is there anything else you want to do?");
+        //  }
         session.endDialogWithResult({ response: session.dialogData });
     }
 ]);
@@ -238,76 +258,40 @@ intents.matches('ViewClass', [
     }
     if(classInfo.date) {
 
-      // var  options = {
-      //   uri: 'http://nuffieldapiwrapper.azurewebsites.net/bookClass',
-      //   method: 'POST',
-      //   body: {
-      //    class_id: '1'
-      //   },
-      //   json: true
-      // }
-      //
-      // request(options)
-      //     .then(function (response) {
-      //       console.log(response.statusCode);
-      //       // Handle the response
-      //     })
-      //     .catch(function (err) {
-      //       console.log(err);
-      //       // Deal with the error
-      // });
-      // var options = {
-      //   host: 'http://nuffieldapiwrapper.azurewebsites.net',
-      //   path: '/classes'
-      // };
-      // http.get(options, function(resp){
-      //   resp.on('data', function(chunk){
-      //     console.log(chunk);
-      //     var classInformation = JSON.parse(chunk);
-      //     session.send("These are the available classes: ");
-      //     var info = session.availableClassesInfo = []
-      //     classInformation[0].classTime = classInformation[0].classTime.replace('.0000000', '');
-      //     info.push({Class_Name: classInformation[0].ClassName, Class_Time: classInformation[0].classTime, Duration: classInformation[0].Duration, Class_Days: classInformation[0].classDays  });
-      //     console.log(info[0].Class_Name);
-      //     var selectedCardName = HeroCardName;
-      //     var card = createHeroCard(session);
-      //
-      //     // attach the card to the reply message
-      //     var msg = new builder.Message(session).addAttachment(card);
-      //     session.send(msg);
-      //     //do something with chunk
-      //   });
-      // }).on("error", function(e){
-      //   console.log("Got error: " + e.message);
-      // });
       request('http://nuffieldapiwrapper.azurewebsites.net/classes', function (error, response, body) {
           if (!error && response.statusCode == 200) {
             console.log(body); // Print the google web page.
             var classInformation = JSON.parse(body);
             // session.send("These are the available classes: ");
-            // for(var i = 0; i < classInformation.length; i++) {
-            //   session.send("Class Name: " + classInformation[0].ClassName + "\n" +
-            //   "Class Time: " + classInformation[0].classTime + "\n"+
-            //   "Duration: " + classInformation[0].Duration + "\n" +
-            //   "Class Days: " + classInformation[0].classDays
-            //   );
+            console.log(classInformation);
+            console.log(classInformation.length);
+            var info;
+            for(var i = 0; i < classInformation.length; i++) {
+              // session.send("Class Name: " + classInformation[i].ClassName + "\n" +
+              // "Class Time: " + classInformation[i].classTime + "\n"+
+              // "Duration: " + classInformation[i].Duration + "\n" +
+              // "Class Days: " + classInformation[i].classDays
+              // );
 
               //console.log("\n");
-              var info = session.availableClassesInfo = []
-              classInformation[0].classTime = classInformation[0].classTime.replace('.0000000', '');
-              info.push({Class_Name: classInformation[0].ClassName, Class_Time: classInformation[0].classTime, Duration: classInformation[0].Duration, Class_Days: classInformation[0].classDays  });
-              console.log(info[0].Class_Name);
-              var selectedCardName = HeroCardName;
+              info = session.availableClassesInfo = []
+              classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
+              info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays  });
+              console.log(info.length);
+              //console.log("The info"+info[i].Class_Name);
+              //var selectedCardName = HeroCardName;
               var card = createHeroCard(session);
 
               // attach the card to the reply message
               var msg = new builder.Message(session).addAttachment(card);
               session.send(msg);
+              console.log(session);
            //}
 
             //session.send(classInformation);
          }
-      });
+       }
+      })
     }
     else {
       session.send("Sorry I didn't recognize the class information");
@@ -316,6 +300,66 @@ intents.matches('ViewClass', [
   }
 
 ]);
+
+intents.matches('ActiveBookings', [
+  function(session, args, next) {
+    request({
+        url: 'http://nuffieldhealth.azurewebsites.net/ActiveBookings', //URL to hit
+        method: 'GET',
+        //Lets post the following key/values as form
+        body: {
+          userID: "1"
+        }
+    }, function(error, response, body){
+        if(error) {
+            console.log(error);
+        } else {
+            console.log(response.statusCode, body);
+            session.send("Your class is successfully booked!");
+            session.send("OK...Is there anything else you want to do?");
+    }
+  })
+}
+]);
+
+
+// intents.matches('MedicalQuestion', [
+//   function(session, args, next) {
+//     var partOfBody = builder.EntityRecognizer.findEntity(args.entities, 'partOfBody');
+//     session.dialogData.medicalInfo = {
+//       partOfBody: partOfBody? partOfBody.entity(): null
+//     }
+//     if(!partOfBody) {
+//       session.Prompts.text("What part of your body hurt?");
+//     }
+//     else {
+//       next();
+//     }
+//   },
+//   fucntion(session, results, next) {
+//     var partOfBody = builder.EntityRecognizer.findEntity([results.response], 'partOfBody');
+//     if(partOfBody == "ankle") {
+//       next();
+//     }
+//     else {
+//       session.endDialogWithResult({ response: session.dialogData });
+//     }
+//   },
+//   function(session, results, next) {
+//     session.Prompts.text("Have you had a trauma?");
+//     next();
+//   },
+//   function(session, results, next) {
+//     if(results.response == "yes") {
+//       session.Prompts.text("Did you hear a pop or crack?");
+//     }
+//     if(results.response == "no") {
+//       session.Prompts.text("Is your pain above 5/10?");
+//     }
+//     next();
+//   },
+//
+// ]);
 
 
 
@@ -328,15 +372,20 @@ function createHeroCard(session) {
             builder.CardImage.create(session, 'https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg')
         ])
         .buttons([
-            builder.CardAction.openUrl(session, 'https://www.nuffieldhealth.com/gyms/classes/yoga', 'Book your Class')
+            message = builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/token', 'Book your Class')
         ]);
 }
 
+var callback = function(token){
+  console.log(token);
+}
 
+server.post('/callback', function(req, res){
+  callback(req.params['token']);
+  res.send(200);
+})
 
 if (useEmulator) {
-    var restify = require('restify');
-    var server = restify.createServer();
     server.listen(3978, function() {
         console.log('test bot endpont at http://localhost:3978/api/messages');
     });
