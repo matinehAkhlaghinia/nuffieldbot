@@ -39,8 +39,8 @@ var bot = new builder.UniversalBot(connector);
 bot.dialog('/', intents);
 intents.matches('Introduction', [
   function (session, args) {
-      session.send("Hi there, I am the Nuffield bot!");
-      session.send("You can view, book, and cancel gym classes through me. What can I do for you today?");
+      session.send("Hi there, I am the Nuffield Health bot!");
+      session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
     }
 ]);
 
