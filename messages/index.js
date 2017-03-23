@@ -10,7 +10,7 @@ var request = require('request');
 var restify = require('restify');
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -87,12 +87,8 @@ intents.matches('BookClass', [
 
    function (session, results, next) {
         //session.userData.toBeBooked = results.response.entity;
-
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
-          //  if(results.response == "reset") {
-          //    session.endConversation();
-          //  }
            classInfo.title = results.response;
         }
         if(classInfo.title && !classInfo.date) {
@@ -101,25 +97,6 @@ intents.matches('BookClass', [
            next();
         }
     },
-    // function (session, results, next) {
-    //     var classInfo = session.dialogData.classInformation;
-    //     //session.send("The response was"+ results.response);
-    //     if(results.response) {
-    //         console.log(results.response);
-    //         var date = builder.EntityRecognizer.resolveTime([results.response]);
-    //         //session.send("the date issss " + date);
-    //         console.log(date);
-    //         date = new Date(date);
-    //         classInfo.date = date ? date.getDate() : null;
-    //     }
-    //     session.send("The date is "+ classInfo.date);
-    //     if(classInfo.date && !classInfo.time) {
-    //        builder.Prompts.text("What time would you like to book the class for?");
-    //     }
-    //     else {
-    //        next();
-    //     }
-    //},
     function (session, results) {
         var classInfo = session.dialogData.classInformation;
             if(results.response) {
@@ -127,11 +104,6 @@ intents.matches('BookClass', [
                 date = new Date(date);
                 classInfo.date = date ? date.getDate() : null;
             }
-        // if(results.response) {
-        //     var time = builder.EntityRecognizer.resolveTime([results.response]);
-        //     classInfo.time = time ? time.getTime() : null;
-        //     //classInfo.time = results.response;
-        // }
         if(classInfo.title && classInfo.date) {
             session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
             request({
@@ -257,7 +229,7 @@ intents.matches('ViewClass', [
     }
     if(classInfo.date) {
 
-      request('http://nuffieldapiwrapper.azurewebsites.net/classes', function (error, response, body) {
+      request('http://nuffieldhealth.azurewebsites.net/classes', function (error, response, body) {
           if (!error && response.statusCode == 200) {
             console.log(body); // Print the google web page.
             var classInformation = JSON.parse(body);
@@ -265,6 +237,7 @@ intents.matches('ViewClass', [
             console.log(classInformation);
             console.log(classInformation.length);
             var info;
+            var cards = [];
             for(var i = 0; i < classInformation.length; i++) {
               // session.send("Class Name: " + classInformation[i].ClassName + "\n" +
               // "Class Time: " + classInformation[i].classTime + "\n"+
@@ -279,16 +252,25 @@ intents.matches('ViewClass', [
               console.log(info.length);
               //console.log("The info"+info[i].Class_Name);
               //var selectedCardName = HeroCardName;
-              var card = createHeroCard(session);
+              cards.push(createHeroCard(session));
+
+               //  // create reply with Carousel AttachmentLayout
+               //  session.send(reply);
 
               // attach the card to the reply message
-              var msg = new builder.Message(session).addAttachment(card);
-              session.send(msg);
+              //var msg = new builder.Message(session).addAttachment(card);
               //console.log(session);
            //}
 
             //session.send(classInformation);
          }
+         session.cards = cards;
+         var cards_carousel = getCardsAttachments(session);
+         var reply = new builder.Message(session)
+             .attachmentLayout(builder.AttachmentLayout.carousel)
+             .attachments(cards_carousel);
+         session.send(reply);
+
        }
       })
     }
@@ -360,6 +342,10 @@ intents.matches('ActiveBookings', [
 //
 // ]);
 
+
+function getCardsAttachments(session) {
+    return session.cards;
+}
 
 
 function createHeroCard(session) {
