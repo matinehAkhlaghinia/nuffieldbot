@@ -7,9 +7,10 @@ https://docs.botframework.com/en-us/node/builder/chat/dialogs/#waterfall
 var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 var request = require('request');
+var restify = require('restify');
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -283,7 +284,7 @@ intents.matches('ViewClass', [
               // attach the card to the reply message
               var msg = new builder.Message(session).addAttachment(card);
               session.send(msg);
-              console.log(session);
+              //console.log(session);
            //}
 
             //session.send(classInformation);
@@ -370,7 +371,7 @@ function createHeroCard(session) {
             builder.CardImage.create(session, 'https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg')
         ])
         .buttons([
-            message = builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/token', 'Book your Class')
+           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/token', 'Book your Class')
         ]);
 }
 
@@ -380,10 +381,10 @@ var callback = function(token){
 
 if (useEmulator) {
 
-    var restify = require('restify');
     var server = restify.createServer();
 
     server.post('/callback', function(req, res){
+      console.log('here');
       callback(req.params['token']);
       res.send(200);
     })
