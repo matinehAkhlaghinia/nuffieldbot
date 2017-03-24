@@ -8,9 +8,16 @@ var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 var request = require('request');
 var restify = require('restify');
+var server = restify.createServer();
+
+server.post('/callback', function(req, res){
+  console.log('here');
+  callback(req.params['token']);
+  res.send(200);
+});
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -42,6 +49,36 @@ bot.dialog('reset', function (session) {
     // reset data
     session.endConversation("What do you want to do today?");
 });
+
+
+var displayClasses = function(session){
+  var info = [];
+  var cards = [];
+  var classInformation = session.classInformation;
+  for(var i = 0; i < classInformation.length; i++) {
+    info = session.availableClassesInfo = []
+    classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
+    var class_img;
+    if(classInformation[i].ClassName == "Yoga") {
+      class_img = "https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg";
+    }
+    else if(classInformation[i].ClassName == "Pilates") {
+      class_img = "https://www.nuffieldhealth.com/local/12/56/0ac2d3e14395b4c54d1d91e07ebd/pilatesonswissballs500x300.jpg";
+    }
+    else if(classInformation[i].ClassName == "Zumba") {
+      class_img = "http://chrisrobertsjump.co.uk/wp-content/uploads/2015/10/Jazzcercise-class_lr.jpg";
+    }
+    info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays, class_img: class_img});
+    console.log(info.length);
+    cards.push(createHeroCard(session));
+  }
+  session.cards = cards;
+  var cards_carousel = getCardsAttachments(session);
+  var reply = new builder.Message(session)
+     .attachmentLayout(builder.AttachmentLayout.carousel)
+     .attachments(cards_carousel);
+  session.send(reply);
+}
 
 bot.dialog('/', intents);
 //
@@ -90,6 +127,24 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
            classInfo.title = results.response;
+           request({
+               url: 'http://nuffieldhealth.azurewebsites.net/classesAvailable', //URL to hit
+               method: 'GET',
+               //Lets post the following key/values as form
+               json: {
+                   class_title: classInfo.title
+               }
+           }, function(error, response, body){
+               if(error) {
+                   console.log(error);
+               } else {
+                   //console.log(response.statusCode, body);
+                   session.send("These are the "+ classInfo.title+ "classes available");
+                   var classInformation = JSON.parse(body);
+                   session.classInformation = classInformation;
+                   displayClasses(session);
+           }
+           });
         }
         if(classInfo.title && !classInfo.date) {
            builder.Prompts.time(session, 'What date would you like to book the class for?');
@@ -236,40 +291,8 @@ intents.matches('ViewClass', [
             // session.send("These are the available classes: ");
             console.log(classInformation);
             console.log(classInformation.length);
-            var info;
-            var cards = [];
-            for(var i = 0; i < classInformation.length; i++) {
-              // session.send("Class Name: " + classInformation[i].ClassName + "\n" +
-              // "Class Time: " + classInformation[i].classTime + "\n"+
-              // "Duration: " + classInformation[i].Duration + "\n" +
-              // "Class Days: " + classInformation[i].classDays
-              // );
-
-              //console.log("\n");
-              info = session.availableClassesInfo = []
-              classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
-              info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays  });
-              console.log(info.length);
-              //console.log("The info"+info[i].Class_Name);
-              //var selectedCardName = HeroCardName;
-              cards.push(createHeroCard(session));
-
-               //  // create reply with Carousel AttachmentLayout
-               //  session.send(reply);
-
-              // attach the card to the reply message
-              //var msg = new builder.Message(session).addAttachment(card);
-              //console.log(session);
-           //}
-
-            //session.send(classInformation);
-         }
-         session.cards = cards;
-         var cards_carousel = getCardsAttachments(session);
-         var reply = new builder.Message(session)
-             .attachmentLayout(builder.AttachmentLayout.carousel)
-             .attachments(cards_carousel);
-         session.send(reply);
+            session.classInformation = classInformation;
+            displayClasses(session);
 
        }
       })
@@ -354,7 +377,7 @@ function createHeroCard(session) {
         .subtitle(session.availableClassesInfo[0]["Duration"])
         .text(session.availableClassesInfo[0]["Class_Time"] + " \n " +session.availableClassesInfo[0]["Class_Days"])
         .images([
-            builder.CardImage.create(session, 'https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg')
+            builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
         ])
         .buttons([
            builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/token', 'Book your Class')
@@ -366,15 +389,6 @@ var callback = function(token){
 }
 
 if (useEmulator) {
-
-    var server = restify.createServer();
-
-    server.post('/callback', function(req, res){
-      console.log('here');
-      callback(req.params['token']);
-      res.send(200);
-    })
-
     server.listen(3978, function() {
         console.log('test bot endpont at http://localhost:3978/api/messages');
     });
