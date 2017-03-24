@@ -10,6 +10,11 @@ var request = require('request');
 var restify = require('restify');
 var cloudinary = require('cloudinary');
 var server = restify.createServer();
+var token;
+var callback = function(token){
+  token = token;
+  console.log(token);
+}
 
 server.post('/callback', function(req, res){
   console.log('here');
@@ -316,9 +321,15 @@ intents.matches('ViewClass', [
 
        }
       })
+      if(token) {
+        session.send("SUCCESS");
+      }
     }
     else {
       session.send("Sorry I didn't recognize the class information");
+    }
+    if(token) {
+      session.send("SUCCESS");
     }
     session.endDialogWithResult({ response: session.dialogData });
   }
@@ -404,9 +415,6 @@ function createHeroCard(session) {
         ]);
 }
 
-var callback = function(token){
-  console.log(token);
-}
 
 if (useEmulator) {
     server.listen(3978, function() {
