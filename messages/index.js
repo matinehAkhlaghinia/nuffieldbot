@@ -8,12 +8,32 @@ var builder = require("botbuilder");
 var botbuilder_azure = require("botbuilder-azure");
 var request = require('request');
 var restify = require('restify');
+var cloudinary = require('cloudinary');
 var server = restify.createServer();
 
 server.post('/callback', function(req, res){
   console.log('here');
   callback(req.params['token']);
   res.send(200);
+});
+
+
+cloudinary.config({
+  cloud_name: 'dhl2r3xhs',
+  api_key: '423592355274385',
+  api_secret: 'TF6QnKD_MUALdQiTZLSRFvlfGWs'
+});
+
+cloudinary.uploader.upload("yoga.jpg", function(result) {
+  console.log(result)
+});
+
+cloudinary.uploader.upload("zumba.jpg", function(result) {
+  console.log(result)
+});
+
+cloudinary.uploader.upload("pilates.jpg", function(result) {
+  console.log(result)
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
@@ -60,13 +80,13 @@ var displayClasses = function(session){
     classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
     var class_img;
     if(classInformation[i].ClassName == "Yoga") {
-      class_img = "https://www.nuffieldhealth.com/local/ce/86/aa34c7784fbd81a42f8dc3980554/yoga2-500x300.jpg";
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331763/j08c1mcdacjquhsr3lib.jpg";
     }
     else if(classInformation[i].ClassName == "Pilates") {
-      class_img = "https://www.nuffieldhealth.com/local/12/56/0ac2d3e14395b4c54d1d91e07ebd/pilatesonswissballs500x300.jpg";
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/jfwyeon6sicjmznmiqme.jpg";
     }
     else if(classInformation[i].ClassName == "Zumba") {
-      class_img = "http://chrisrobertsjump.co.uk/wp-content/uploads/2015/10/Jazzcercise-class_lr.jpg";
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/f7usah8cpqoobxar6brg.jpg";
     }
     info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays, class_img: class_img});
     console.log(info.length);
