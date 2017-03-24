@@ -19,6 +19,9 @@ var callback = function(token){
 server.post('/callback', function(req, res){
   console.log('here');
   callback(req.params['token']);
+  if(token) {
+    session.send("SUCCESS");
+  }
   res.send(200);
 });
 
@@ -321,9 +324,6 @@ intents.matches('ViewClass', [
 
        }
       })
-      if(token) {
-        session.send("SUCCESS");
-      }
     }
     else {
       session.send("Sorry I didn't recognize the class information");
