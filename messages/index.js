@@ -16,7 +16,7 @@ var callback = function(token){
   console.log(token);
 }
 
-server.post('/api/messages/callback', function(req, res){
+server.post('/api/messages', function(req, res){
   console.log('here');
   callback(req.params['token']);
   if(token) {
