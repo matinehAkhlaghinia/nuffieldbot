@@ -16,14 +16,14 @@ var callback = function(token){
   console.log(token);
 }
 
-server.post('/api/messages', function(req, res){
-  console.log('here');
-  callback(req.params['token']);
-  if(token) {
-    session.send("SUCCESS");
-  }
-  res.send(200);
-});
+// server.post('/api/messages', function(req, res){
+//   console.log('here');
+//   callback(req.params['token']);
+//   if(token) {
+//     session.send("SUCCESS");
+//   }
+//   res.send(200);
+// });
 
 
 cloudinary.config({
@@ -72,11 +72,11 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
 
 
-// reset the bot
-bot.dialog('reset', function (session) {
-    // reset data
-    session.endConversation("What do you want to do today?");
-});
+// // reset the bot
+// bot.dialog('reset', function (session) {
+//     // reset data
+//     session.endConversation("What do you want to do today?");
+// });
 
 
 var displayClasses = function(session){
@@ -107,7 +107,23 @@ var displayClasses = function(session){
      .attachments(cards_carousel);
   session.send(reply);
 }
-
+var convertDayToString = function(day) {
+  if(day == '1')
+    return "Monday";
+  else if(day == '2')
+    return "Tuesday";
+  else if(day == '3')
+    return "Wednesday";
+  else if(day =='4')
+    return "Thursday";
+  else if(day == '5')
+    return "Friday";
+  else if(day == '6')
+    return "Saturday";
+  else {
+    return "Sunday";
+  }
+}
 bot.dialog('/', intents);
 //
 // bot.endConversationAction('reset', 'reset').matches('reset', [
@@ -137,10 +153,12 @@ intents.matches('BookClass', [
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
         var classDate = new Date(classTime);
+        var classDay = classDate.getDay();
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
           //time:  classTime ? classTime.getTime() : null,
-          date:  classDate ? classDate.getDate() : null
+          date:  classDate ? classDate.getDate() : null,
+          day: classDay ? convertDayToString(classDay) : null
         };
         if(!classInfo.title) {
           builder.Prompts.text(session, "What is the name of the class you want to book?");
@@ -155,24 +173,6 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
            classInfo.title = results.response;
-           request({
-               url: 'http://nuffieldhealth.azurewebsites.net/classesAvailable', //URL to hit
-               method: 'GET',
-               //Lets post the following key/values as form
-               json: {
-                   class_title: classInfo.title
-               }
-           }, function(error, response, body){
-               if(error) {
-                   console.log(error);
-               } else {
-                   //console.log(response.statusCode, body);
-                   session.send("These are the "+ classInfo.title+ "classes available");
-                   var classInformation = JSON.parse(body);
-                   session.classInformation = classInformation;
-                   displayClasses(session);
-           }
-           });
         }
         if(classInfo.title && !classInfo.date) {
            builder.Prompts.time(session, 'What date would you like to book the class for?');
@@ -185,34 +185,62 @@ intents.matches('BookClass', [
             if(results.response) {
                 var date = builder.EntityRecognizer.resolveTime([results.response]);
                 date = new Date(date);
-                classInfo.date = date ? date.getDate() : null;
+                var day = date.getDay();
+                classInfo.date = date ? day : null;
+                classInfo.day = day ? convertDayToString(day) : null;
             }
         if(classInfo.title && classInfo.date) {
-            session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
+            //session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
             request({
-                url: 'http://nuffieldhealth.azurewebsites.net/book_class', //URL to hit
+                url: 'http://nuffieldhealth.azurewebsites.net/classAvailable',
                 method: 'POST',
-                //Lets post the following key/values as form
                 json: {
-                    userID: '1',
-                    classID: '2',
-                    class_name: "'"+classInfo.title+"'",
-                    classDate: "'"+classInfo.date+"'"
+                    class_title: "'"+classInfo.title+"'",
+                    class_date: "'"+classInfo.day+"'"
                 }
             }, function(error, response, body){
                 if(error) {
                     console.log(error);
                 } else {
                     console.log(response.statusCode, body);
-                    session.send("Your class is successfully booked!");
-                    session.send("OK...Is there anything else you want to do?");
+                    console.log("THE BODY" + body);
+                    console.log(body.length+ " THE LENGTH");
+                    if(body.length == 0) {
+                      session.send("The class you are looking for doesn't exist for that day, you can view available classes for " + classInfo.day + "!");
+                      session.endDialogWithResult({ response: session.dialogData });
+                    }
+                    else {
+                      builder.Prompts.text(session, 'Can I confirm that you want to book a '+ classInfo.title + " class for " + classInfo.day + "?");
+                      session.classID = body[0].ClassID;
+                      console.log(session.classID);
+                    }
             }
             });
         }
-        // else {
-        //     session.send("OK...Is there anything else you want to do?");
-        //  }
-        session.endDialogWithResult({ response: session.dialogData });
+    },
+    function(session, results) {
+      if(results.response == "yes" || results.response == "Yes" || results.response == "Sure" || results.response == "sure") {
+        request({
+            url: 'http://nuffieldhealth.azurewebsites.net/book_class',
+            method: 'POST',
+            json: {
+                userID: '1',
+                classID: session.classID
+            }
+        }, function(error, response, body){
+            if(error) {
+                console.log(error);
+            } else {
+                console.log(response.statusCode, body);
+                session.send("Your class is successfully booked!");
+                session.send("Is there anything else you want to do?");
+        }
+        });
+      }
+      else {
+        session.send("I'm sorry can you tell me again what I can do for you?");
+      }
+      session.endDialogWithResult({ response: session.dialogData });
     }
 ]);
 
