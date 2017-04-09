@@ -64,12 +64,93 @@ var AnimationCardName = "Animation card";
 var VideoCardName = "Video card";
 var AudioCardName = "Audio card";
 
-const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
-//const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+//const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=4bfee3fdd12e428ba1424426479fc04a';
+
 
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
+
+var nuffield_id = null;
+var getNuffieldID = function() {
+  request({
+      url: 'https://transpiredashboard.westeurope.cloudapp.azure.com/skype/nuffieldId',
+      method: 'POST',
+      form: {
+          id: user_id_login,
+          key:'srnsgDxaoMuWP7IkDAXQNa6ms5YJeeULGeZNHEJ4qPyEd1H3QpDgYAZPyj5McVBNHDo7xuNgdcq4I2Lr2rj7FvFDorSfKb6LIDpT9ha8nNJOyBWC8PQpo8o4=='
+      }
+  }, function(error, response, body){
+      if(error) {
+          console.log(error);
+      } else {
+          var body = JSON.parse(body);
+          nuffield_id = body.nuffieldID;
+          console.log(response.statusCode, nuffield_id);
+  }
+  });
+}
+var getSubscribers = function(session) {
+  request({
+      url: 'https://transpiredashboard.westeurope.cloudapp.azure.com/skype/subscribers',
+      method: 'POST',
+      form: {
+          id: user_id_login,
+          key:'srnsgDxaoMuWP7IkDAXQNa6ms5YJeeULGeZNHEJ4qPyEd1H3QpDgYAZPyj5McVBNHDo7xuNgdcq4I2Lr2rj7FvFDorSfKb6LIDpT9ha8nNJOyBWC8PQpo8o4=='
+      }
+  }, function(error, response, body){
+      if(error) {
+          console.log(error);
+      } else {
+          var resp = JSON.parse(body);
+          var subscribers = [];
+          for (var r in resp.subscribers){
+            if (resp[r]) subscribers.push(r);
+          }
+
+          var customDate = session.classDate;
+          var hours = parseInt(session.classTime[0])*10 + parseInt(session.classTime[1]) - 1;
+
+          customDate += hours*3600;
+          console.log(customDate);
+          var classBooking = {
+            userID : user_id_login,
+            name : session.className,
+            date: customDate
+          }
+
+          var msg = {
+            model : "booking",
+            content : classBooking
+          }
+
+          var msgString = JSON.stringify(msg);
+
+          var subscribersStr = JSON.stringify(subscribers);
+
+          console.log(response.statusCode, body);
+
+          request({
+              url: 'https://transpiredashboard.westeurope.cloudapp.azure.com/queues/push',
+              method: 'POST',
+              form: {
+                  subscribers: subscribersStr,
+                  m: msgString,
+                  key:'srnsgDxaoMuWP7IkDAXQNa6ms5YJeeULGeZNHEJ4qPyEd1H3QpDgYAZPyj5McVBNHDo7xuNgdcq4I2Lr2rj7FvFDorSfKb6LIDpT9ha8nNJOyBWC8PQpo8o4=='
+              }
+          }, function(err, resp, body){
+            if(err){
+              console.log(err);
+              return
+            } else if(resp.statusCode != 200){
+              console.log(resp.statusCode, body);
+            }
+          });
+  }
+  });
+}
+
 
 
 // // reset the bot
@@ -77,7 +158,27 @@ var bot = new builder.UniversalBot(connector);
 //     // reset data
 //     session.endConversation("What do you want to do today?");
 // });
-
+var user_id_login = null;
+var userIsLoggedin = function(user_session) {
+    console.log(user_session);
+    request({
+        url: 'http://nuffieldhealth.azurewebsites.net/isLoggedin',
+        method: 'POST',
+        json: {
+            user_session: "'"+user_session+"'"
+        }
+    }, function(error, response, body){
+        if(error) {
+            console.log(error);
+        } else {
+            console.log(response.statusCode, body);
+            user_id_login = body[0].user_id;
+            console.log(user_id_login);
+            //console.log(response.statusCode, body);
+            //console.log("THE BODY" + JSOn.parse(body));
+    }
+    });
+}
 
 var displayClasses = function(session){
   var info = [];
@@ -135,6 +236,10 @@ bot.dialog('/', intents);
 
 intents.matches('Introduction', [
   function (session, args) {
+      var user_session = session.message.sourceEvent.clientActivityId;
+      console.log(user_session);
+      console.log(user_session.slice(0, user_session.length-2));
+
       session.send("Hi there, I am the Nuffield Health bot!");
       session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
     }
@@ -147,18 +252,39 @@ intents.matches('Introduction', [
 //     }
 // ]);
 
-
+var user_session;
 intents.matches('BookClass', [
    function (session, args, next) {
+     user_session = session.message.sourceEvent.clientActivityId;
+     user_session = user_session.slice(0, user_session.length-2);
+     console.log(user_session);
+     request({
+         url: 'http://nuffieldhealth.azurewebsites.net/addSession',
+         method: 'POST',
+         json: {
+             user_session: "'"+user_session+"'"
+         }
+     }, function(error, response, body){
+         if(error) {
+             console.log(error);
+         } else {
+             console.log(response.statusCode, body);
+             console.log("THE BODY" + body);
+     }
+     });
+
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
-        var classDate = new Date(classTime);
-        var classDay = classDate.getDay();
+        console.log(args.entities[0].entity.resolution);
+        console.log(classTime);
+
+        //console.log(classTime.getDate());
+        //var classDay = classTime.getDay();
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
           //time:  classTime ? classTime.getTime() : null,
-          date:  classDate ? classDate.getDate() : null,
-          day: classDay ? convertDayToString(classDay) : null
+          date:  classTime ? classTime : null,
+          day: classTime ? convertDayToString(classTime.getDay()) : null
         };
         if(!classInfo.title) {
           builder.Prompts.text(session, "What is the name of the class you want to book?");
@@ -190,6 +316,10 @@ intents.matches('BookClass', [
                 classInfo.day = day ? convertDayToString(day) : null;
             }
         if(classInfo.title && classInfo.date) {
+            session.classDate = session.dialogData.classInformation.date;
+            session.className = session.dialogData.classInformation.title;
+            console.log(session.className);
+            console.log(session.classDate);
             //session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
             request({
                 url: 'http://nuffieldhealth.azurewebsites.net/classAvailable',
@@ -210,10 +340,33 @@ intents.matches('BookClass', [
                       session.endDialogWithResult({ response: session.dialogData });
                     }
                     else {
-                      builder.Prompts.text(session, 'Can I confirm that you want to book a '+ classInfo.title + " class for " + classInfo.day + "?");
-                      session.classID = body[0].ClassID;
-                      console.log(session.classID);
-                    }
+                      session.classInformation = body;
+                      console.log(session.classInformation);
+                      session.classTime = body[0].classTime;
+                      console.log(session.classTime);
+                      displayClasses(session);
+                      var count = 0;
+                      var execute = true;
+                      var intervalFunction = function(){
+                          userIsLoggedin(user_session);
+                          count++;
+                          if(count == 3) {
+                            clearInterval(myVar);
+                            if(user_id_login == null) {
+                              session.send("Is there anything else you want to do?");
+                              session.endDialogWithResult({ response: session.dialogData });
+                            }
+                            else {
+                              getNuffieldID();
+                              getSubscribers(session);
+                              builder.Prompts.text(session,'Can I confirm that you want to book a '+ classInfo.title + " class for " + classInfo.day + "?");
+                            }
+                          }
+                      }
+                      var myVar = setInterval(intervalFunction, 10000);
+
+
+                  }
             }
             });
         }
@@ -317,10 +470,32 @@ intents.matches('CancelClass', [
     }
 ]);
 
+
 intents.matches('ViewClass', [
   function (session, args, next) {
+    user_session = session.message.sourceEvent.clientActivityId;
+    user_session = user_session.slice(0, user_session.length-2);
+    console.log(user_session);
+    request({
+        url: 'http://nuffieldhealth.azurewebsites.net/addSession',
+        method: 'POST',
+        json: {
+            user_session: "'"+user_session+"'"
+        }
+    }, function(error, response, body){
+        if(error) {
+            console.log(error);
+        } else {
+            console.log(response.statusCode, body);
+            console.log("THE BODY" + body);
+    }
+    });
+    console.log("these are " + JSON.stringify(args.entities))
     var date = builder.EntityRecognizer.resolveTime(args.entities);
+    console.log(date);
     date = new Date(date);
+    console.log(date.getDate());
+    console.log(date);
     var classInfo = session.dialogData.classInfo = {
       date: date ? date.getDate() : null
     }
@@ -439,7 +614,7 @@ function createHeroCard(session) {
             builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/token', 'Book your Class')
+           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/identify&skypeSession='+ user_session, 'Book your Class')
         ]);
 }
 
