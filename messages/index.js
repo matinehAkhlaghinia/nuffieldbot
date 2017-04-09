@@ -117,7 +117,8 @@ var getSubscribers = function(session) {
           var classBooking = {
             userID : user_id_login,
             name : session.className,
-            date: customDate
+            date: session.classDate,
+            time: session.classTime
           }
 
           var msg = {
