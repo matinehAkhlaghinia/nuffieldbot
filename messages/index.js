@@ -209,6 +209,36 @@ var displayClasses = function(session){
      .attachments(cards_carousel);
   session.send(reply);
 }
+
+var displayClassesAvailable = function(session){
+  var info = [];
+  var cards = [];
+  var classInformation = session.classInformation;
+  for(var i = 0; i < classInformation.length; i++) {
+    info = session.availableClassesInfo = []
+    classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
+    var class_img;
+    if(classInformation[i].ClassName == "Yoga") {
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331763/j08c1mcdacjquhsr3lib.jpg";
+    }
+    else if(classInformation[i].ClassName == "Pilates") {
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/jfwyeon6sicjmznmiqme.jpg";
+    }
+    else if(classInformation[i].ClassName == "Zumba") {
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/f7usah8cpqoobxar6brg.jpg";
+    }
+    info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays, class_img: class_img});
+    console.log(info.length);
+    cards.push(createHeroCardVersion2(session));
+  }
+
+  session.cards = cards;
+  var cards_carousel = getCardsAttachments(session);
+  var reply = new builder.Message(session)
+     .attachmentLayout(builder.AttachmentLayout.carousel)
+     .attachments(cards_carousel);
+  session.send(reply);
+}
 var convertDayToString = function(day) {
   if(day == '1')
     return "Monday";
@@ -474,31 +504,10 @@ intents.matches('CancelClass', [
 
 intents.matches('ViewClass', [
   function (session, args, next) {
-    user_session = session.message.sourceEvent.clientActivityId;
-    user_session = user_session.slice(0, user_session.length-2);
-    console.log(user_session);
-    request({
-        url: 'http://nuffieldhealth.azurewebsites.net/addSession',
-        method: 'POST',
-        json: {
-            user_session: "'"+user_session+"'"
-        }
-    }, function(error, response, body){
-        if(error) {
-            console.log(error);
-        } else {
-            console.log(response.statusCode, body);
-            console.log("THE BODY" + body);
-    }
-    });
-    console.log("these are " + JSON.stringify(args.entities))
     var date = builder.EntityRecognizer.resolveTime(args.entities);
-    console.log(date);
-    date = new Date(date);
-    console.log(date.getDate());
-    console.log(date);
+    console.log("THE DATE IS " + date);
     var classInfo = session.dialogData.classInfo = {
-      date: date ? date.getDate() : null
+      date: date ? convertDayToString(date.getDay()) : null
     }
     if(!classInfo.date) {
       builder.Prompts.time(session, "For what date do you want to view available classes?");
@@ -511,29 +520,28 @@ intents.matches('ViewClass', [
     var classInfo = session.dialogData.classInfo;
     if(results.response) {
       var date = builder.EntityRecognizer.resolveTime([results.response]);
-      date = new Date(date);
-      classInfo.date = date ? date.getDate(): null
+      //date = new Date(date);
+      classInfo.date = date ? convertDayToString(date.getDay()): null
     }
     if(classInfo.date) {
-
-      request('http://nuffieldhealth.azurewebsites.net/classes', function (error, response, body) {
-          if (!error && response.statusCode == 200) {
-            console.log(body); // Print the google web page.
-            var classInformation = JSON.parse(body);
-            // session.send("These are the available classes: ");
-            console.log(classInformation);
-            console.log(classInformation.length);
-            session.classInformation = classInformation;
-            displayClasses(session);
-
-       }
-      })
+      request({
+          url: 'http://nuffieldhealth.azurewebsites.net/classAvailableOnDay',
+          method: 'POST',
+          json: {
+              class_day: "'"+classInfo.date+"'"
+          }
+      }, function(error, response, body){
+          if(error) {
+              console.log(error);
+          } else {
+              console.log(response.statusCode, body);
+              session.classInformation = body;
+              displayClassesAvailable(session);
+      }
+      });
     }
     else {
       session.send("Sorry I didn't recognize the class information");
-    }
-    if(token) {
-      session.send("SUCCESS");
     }
     session.endDialogWithResult({ response: session.dialogData });
   }
@@ -619,6 +627,15 @@ function createHeroCard(session) {
         ]);
 }
 
+function createHeroCardVersion2(session) {
+    return new builder.HeroCard(session)
+        .title(session.availableClassesInfo[0]["Class_Name"])
+        .subtitle(session.availableClassesInfo[0]["Duration"])
+        .text(session.availableClassesInfo[0]["Class_Time"] + " \n " +session.availableClassesInfo[0]["Class_Days"])
+        .images([
+            builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
+        ]);
+}
 
 if (useEmulator) {
     server.listen(3978, function() {
