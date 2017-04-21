@@ -239,6 +239,36 @@ var displayClassesAvailable = function(session){
      .attachments(cards_carousel);
   session.send(reply);
 }
+
+
+var displayMyClasses = function(session){
+  var info = [];
+  var cards = [];
+  var bookingInfo = session.bookingInfo;
+  for(var i = 0; i < bookingInfo.length; i++) {
+    info = session.bookedClassesInfo = [];
+    //bookingInfo[i].classTime = bookingInfo[i].classTime.replace('.0000000', '');
+    var class_img;
+    if(bookingInfo[i].class_name == "Yoga") {
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331763/j08c1mcdacjquhsr3lib.jpg";
+    }
+    else if(bookingInfo[i].class_name == "Pilates") {
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/jfwyeon6sicjmznmiqme.jpg";
+    }
+    else if(bookingInfo[i].class_name == "Zumba") {
+      class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/f7usah8cpqoobxar6brg.jpg";
+    }
+    info.push({class_name: bookingInfo[i].class_name, class_date: bookingInfo[i].class_date, class_img: class_img});
+    cards.push(createHeroCardVersion3(session));
+  }
+  session.cards = cards;
+  var cards_carousel = getCardsAttachments(session);
+  var reply = new builder.Message(session)
+     .attachmentLayout(builder.AttachmentLayout.carousel)
+     .attachments(cards_carousel);
+  session.send(reply);
+}
+
 var convertDayToString = function(day) {
   if(day == '1')
     return "Monday";
@@ -284,11 +314,12 @@ intents.matches('Introduction', [
 // ]);
 
 var user_session;
+
+
 intents.matches('BookClass', [
    function (session, args, next) {
      user_session = session.message.sourceEvent.clientActivityId;
      user_session = user_session.slice(0, user_session.length-2);
-     console.log(user_session);
      request({
          url: 'http://nuffieldhealth.azurewebsites.net/addSession',
          method: 'POST',
@@ -306,14 +337,8 @@ intents.matches('BookClass', [
 
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
-        console.log(args.entities[0].entity.resolution);
-        console.log(classTime);
-
-        //console.log(classTime.getDate());
-        //var classDay = classTime.getDay();
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
-          //time:  classTime ? classTime.getTime() : null,
           date:  classTime ? classTime : null,
           day: classTime ? convertDayToString(classTime.getDay()) : null
         };
@@ -403,13 +428,15 @@ intents.matches('BookClass', [
         }
     },
     function(session, results) {
+      var classInfo = session.dialogData.classInformation;
       if(results.response == "yes" || results.response == "Yes" || results.response == "Sure" || results.response == "sure") {
         request({
             url: 'http://nuffieldhealth.azurewebsites.net/book_class',
             method: 'POST',
             json: {
-                userID: '1',
-                classID: session.classID
+                userID: user_session,
+                class_name: "'"+classInfo.title+"'",
+                classDate: "'"+classInfo.date+"'"
             }
         }, function(error, response, body){
             if(error) {
@@ -429,77 +456,71 @@ intents.matches('BookClass', [
 ]);
 
 
-intents.matches('CancelClass', [
-   function (session, args, next) {
-        var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
-        var classTime = builder.EntityRecognizer.resolveTime(args.entities);
-        var classDate = new Date(classTime);
-        var classInfo = session.dialogData.classInformation = {
-          title: className ? className.entity : null,
-          //time:  classTime ? classTime.getTime() : null,
-          date:  classDate ? classDate.getDate() : null
-        };
-        if(!classInfo.title) {
-          builder.Prompts.text(session, "What is the name of the class you want to cancel?");
-        }
-        else {
-          next();
-        }
-     },
+// intents.matches('CancelClass', [
+//    function (session, args, next) {
+//         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+//         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+//         var classDate = new Date(classTime);
+//         var classInfo = session.dialogData.classInformation = {
+//           title: className ? className.entity : null,
+//           //time:  classTime ? classTime.getTime() : null,
+//           date:  classDate ? classDate.getDate() : null
+//         };
+//         if(!classInfo.title) {
+//           builder.Prompts.text(session, "What is the name of the class you want to cancel?");
+//         }
+//         else {
+//           next();
+//         }
+//      },
+//
+//    function (session, results, next) {
+//         //session.userData.toBeBooked = results.response.entity;
+//
+//         var classInfo = session.dialogData.classInformation;
+//         if(results.response) {
+//            classInfo.title = results.response;
+//         }
+//         if(classInfo.title && !classInfo.date) {
+//            builder.Prompts.time(session, 'What date would you like to cancel the class for?');
+//         } else {
+//            next();
+//         }
+//     },
+//
+//     function (session, results) {
+//         var classInfo = session.dialogData.classInformation;
+//             if(results.response) {
+//                 var date = builder.EntityRecognizer.resolveTime([results.response]);
+//                 date = new Date(date);
+//                 classInfo.date = date ? date.getDate() : null;
+//             }
 
-   function (session, results, next) {
-        //session.userData.toBeBooked = results.response.entity;
-
-        var classInfo = session.dialogData.classInformation;
-        if(results.response) {
-           classInfo.title = results.response;
-        }
-        if(classInfo.title && !classInfo.date) {
-           builder.Prompts.time(session, 'What date would you like to cancel the class for?');
-        } else {
-           next();
-        }
-    },
-    // function (session, results, next) {
-    //     var classInfo = session.dialogData.classInformation;
-    //     //session.send("The response was"+ results.response);
-    //     if(results.response) {
-    //         console.log(results.response);
-    //         var date = builder.EntityRecognizer.resolveTime([results.response]);
-    //         //session.send("the date issss " + date);
-    //         console.log(date);
-    //         date = new Date(date);
-    //         classInfo.date = date ? date.getDate() : null;
-    //     }
-    //     session.send("The date is "+ classInfo.date);
-    //     if(classInfo.date && !classInfo.time) {
-    //        builder.Prompts.text("What time would you like to book the class for?");
-    //     }
-    //     else {
-    //        next();
-    //     }
-    //},
-    function (session, results) {
-        var classInfo = session.dialogData.classInformation;
-            if(results.response) {
-                var date = builder.EntityRecognizer.resolveTime([results.response]);
-                date = new Date(date);
-                classInfo.date = date ? date.getDate() : null;
-            }
-        // if(results.response) {
-        //     var time = builder.EntityRecognizer.resolveTime([results.response]);
-        //     classInfo.time = time ? time.getTime() : null;
-        //     //classInfo.time = results.response;
-        // }
-        if(classInfo.title && classInfo.date) {
-            session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
-        }
-        else {
-            session.send("OK...Is there anything else you want to do?");
-         }
-        session.endDialogWithResult({ response: session.dialogData });
-    }
-]);
+//         if(classInfo.title && classInfo.date) {
+//           request({
+//               url: 'http://nuffieldhealth.azurewebsites.net/cancelBooking',
+//               method: 'POST',
+//               json: {
+//                   class_name: "'"+classInfo.date+"'",
+//                   class_date: "'"+classInfo.title+"'",
+//                   user_session: user_session
+//               }
+//           }, function(error, response, body){
+//               if(error) {
+//                   console.log(error);
+//               } else {
+//                   console.log(response.statusCode, body);
+//
+//           }
+//           });
+//           session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
+//         }
+//         else {
+//             session.send("OK...Is there anything else you want to do?");
+//          }
+//         session.endDialogWithResult({ response: session.dialogData });
+//     }
+// ]);
 
 
 intents.matches('ViewClass', [
@@ -548,22 +569,25 @@ intents.matches('ViewClass', [
 
 ]);
 
+
+
 intents.matches('ActiveBookings', [
   function(session, args, next) {
     request({
         url: 'http://nuffieldhealth.azurewebsites.net/ActiveBookings', //URL to hit
-        method: 'GET',
+        method: 'POST',
         //Lets post the following key/values as form
-        body: {
-          userID: "1"
+        json: {
+            userID: user_session
         }
     }, function(error, response, body){
         if(error) {
             console.log(error);
         } else {
             console.log(response.statusCode, body);
-            session.send("Your class is successfully booked!");
-            session.send("OK...Is there anything else you want to do?");
+            session.bookingInfo = body;
+            displayMyClasses(session);
+            session.endDialogWithResult({ response: session.bookingInfo });
     }
   })
 }
@@ -634,6 +658,16 @@ function createHeroCardVersion2(session) {
         .text(session.availableClassesInfo[0]["Class_Time"] + " \n " +session.availableClassesInfo[0]["Class_Days"])
         .images([
             builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
+        ]);
+}
+
+function createHeroCardVersion3(session) {
+    return new builder.HeroCard(session)
+        .title(session.bookedClassesInfo[0]["class_name"])
+        .subtitle("")
+        .text("Class date: " + session.bookedClassesInfo[0]["class_date"] + " \n " + "Class time: 14:00-16:00")
+        .images([
+            builder.CardImage.create(session, session.bookedClassesInfo[0]["class_img"])
         ]);
 }
 
