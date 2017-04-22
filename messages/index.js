@@ -337,9 +337,10 @@ intents.matches('BookClass', [
 
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+        var date = new Date(classTime);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
-          date:  classTime ? classTime : null,
+          date:  date ? date.getDate() : null,
           day: classTime ? convertDayToString(classTime.getDay()) : null
         };
         if(!classInfo.title) {
