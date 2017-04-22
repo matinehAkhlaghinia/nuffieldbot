@@ -456,6 +456,7 @@ intents.matches('BookClass', [
 ]);
 
 
+
 intents.matches('CancelClass', [
    function (session, args, next) {
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
@@ -501,8 +502,8 @@ intents.matches('CancelClass', [
               url: 'http://nuffieldhealth.azurewebsites.net/cancelBooking',
               method: 'POST',
               json: {
-                  class_name: "'"+classInfo.date+"'",
-                  class_date: "'"+classInfo.title+"'",
+                  class_name: "'"+classInfo.title+"'",
+                  class_date: "'"+classInfo.date+"'",
                   user_session: user_session
               }
           }, function(error, response, body){
@@ -578,15 +579,21 @@ intents.matches('ActiveBookings', [
         method: 'POST',
         //Lets post the following key/values as form
         json: {
-            userID: user_session
+            userID: user_session ? user_session : null
         }
     }, function(error, response, body){
         if(error) {
             console.log(error);
         } else {
             console.log(response.statusCode, body);
-            session.bookingInfo = body;
-            displayMyClasses(session);
+            console.log("the length"+body.length);
+            if("undefined" === typeof body || body.length == 0)
+                session.send("You don't have any active bookings!");
+            else{
+                session.bookingInfo = body;
+                displayMyClasses(session);
+            }
+            
             session.endDialogWithResult({ response: session.bookingInfo });
     }
   })
