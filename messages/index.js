@@ -369,7 +369,7 @@ intents.matches('BookClass', [
                 var date = builder.EntityRecognizer.resolveTime([results.response]);
                 date = new Date(date);
                 var day = date.getDay();
-                classInfo.date = date ? day : null;
+                classInfo.date = date ? date.getDate() : null;
                 classInfo.day = day ? convertDayToString(day) : null;
             }
         if(classInfo.title && classInfo.date) {
