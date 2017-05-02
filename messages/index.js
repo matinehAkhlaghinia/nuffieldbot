@@ -306,8 +306,9 @@ var user_session;
 
 intents.matches('BookClass', [
    function (session, args, next) {
-     user_session = session.message.sourceEvent.clientActivityId;
-     user_session = user_session.slice(0, user_session.length-2);
+     //user_session = session.message.sourceEvent.clientActivityId;
+     //user_session = user_session.slice(0, user_session.length-2);
+    user_session = "123";
      request({
          url: 'http://nuffieldhealth.azurewebsites.net/addSession',
          method: 'POST',
@@ -316,9 +317,9 @@ intents.matches('BookClass', [
          }
      }, function(error, response, body){
          if(error) {
-             console.log(error);
+             //console.log(error);
          } else {
-             console.log(response.statusCode, body);
+             //console.log(response.statusCode, body);
              //console.log("THE BODY" + body);
      }
      });
@@ -381,7 +382,7 @@ intents.matches('BookClass', [
                 }
             }, function(error, response, body){
                 if(error) {
-                    console.log(error);
+                    //console.log(error);
                 } else {
                     //console.log(response.statusCode, body);
                     //console.log("THE BODY" + body);
@@ -435,7 +436,7 @@ intents.matches('BookClass', [
             }
         }, function(error, response, body){
             if(error) {
-                console.log(error);
+                //console.log(error);
             } else {
                 //console.log(response.statusCode, body);
                 session.send("Your class is successfully booked!");
@@ -503,9 +504,9 @@ intents.matches('CancelClass', [
               }
           }, function(error, response, body){
               if(error) {
-                  console.log(error);
+                  //console.log(error);
               } else {
-                  console.log(response.statusCode, body);
+                  //console.log(response.statusCode, body);
 
           }
           });
@@ -549,9 +550,9 @@ intents.matches('ViewClass', [
           }
       }, function(error, response, body){
           if(error) {
-              console.log(error);
+              //console.log(error);
           } else {
-              console.log(response.statusCode, body);
+              //console.log(response.statusCode, body);
               session.classInformation = body;
               displayClassesAvailable(session);
       }
@@ -578,7 +579,7 @@ intents.matches('ActiveBookings', [
         }
     }, function(error, response, body){
         if(error) {
-            console.log(error);
+            //console.log(error);
         } else {
             console.log(response.statusCode, body);
             //console.log("the length"+body.length);
