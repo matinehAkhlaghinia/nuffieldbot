@@ -45,7 +45,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -114,12 +114,14 @@ var getSubscribers = function(session) {
 
           customDate += hours*3600;
           console.log(customDate);
+
           var classBooking = {
             userID : user_id_login,
             name : session.className,
             date: session.classDate,
             time: session.classTime
           }
+          console.log("IM sending this ", classBooking);
 
           var msg = {
             model : "booking",
@@ -337,6 +339,10 @@ intents.matches('BookClass', [
 
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+        //var date__ = JSON.stringify(args.entities);
+        session.classDate = classTime;
+
+
         var date = new Date(classTime);
         var classInfo = session.dialogData.classInformation = {
           title: className ? className.entity : null,
@@ -367,13 +373,15 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
             if(results.response) {
                 var date = builder.EntityRecognizer.resolveTime([results.response]);
+                console.log("the date is" + date);
+                session.classDate = date;
                 date = new Date(date);
                 var day = date.getDay();
                 classInfo.date = date ? date.getDate() : null;
                 classInfo.day = day ? convertDayToString(day) : null;
             }
         if(classInfo.title && classInfo.date) {
-            session.classDate = session.dialogData.classInformation.date;
+            //session.classDate = session.dialogData.classInformation.date;
             session.className = session.dialogData.classInformation.title;
             console.log(session.className);
             console.log(session.classDate);
@@ -594,7 +602,7 @@ intents.matches('ActiveBookings', [
                 session.bookingInfo = body;
                 displayMyClasses(session);
             }
-            
+
             session.endDialogWithResult({ response: session.bookingInfo });
     }
   })
