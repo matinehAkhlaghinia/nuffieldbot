@@ -11,19 +11,6 @@ var restify = require('restify');
 var cloudinary = require('cloudinary');
 var server = restify.createServer();
 var token;
-var callback = function(token){
-  token = token;
-  console.log(token);
-}
-
-// server.post('/api/messages', function(req, res){
-//   console.log('here');
-//   callback(req.params['token']);
-//   if(token) {
-//     session.send("SUCCESS");
-//   }
-//   res.send(200);
-// });
 
 
 cloudinary.config({
@@ -33,19 +20,19 @@ cloudinary.config({
 });
 
 cloudinary.uploader.upload("yoga.jpg", function(result) {
-  console.log(result)
+  //console.log(result)
 });
 
 cloudinary.uploader.upload("zumba.jpg", function(result) {
-  console.log(result)
+  //console.log(result)
 });
 
 cloudinary.uploader.upload("pilates.jpg", function(result) {
-  console.log(result)
+  //console.log(result)
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-useEmulator = true;
+//useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -65,8 +52,7 @@ var VideoCardName = "Video card";
 var AudioCardName = "Audio card";
 
 //const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
-const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=d935e1dfb6e44c77816b534797f6a272';
-
+const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=65e0068c1ddd40afb156232a400b2d14';
 
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
@@ -87,7 +73,7 @@ var getNuffieldID = function() {
       } else {
           var body = JSON.parse(body);
           nuffield_id = body.nuffieldID;
-          console.log(response.statusCode, nuffield_id);
+          //console.log(response.statusCode, nuffield_id);
   }
   });
 }
@@ -113,7 +99,7 @@ var getSubscribers = function(session) {
           var hours = parseInt(session.classTime[0])*10 + parseInt(session.classTime[1]) - 1;
 
           customDate += hours*3600;
-          console.log(customDate);
+          //console.log(customDate);
 
           var classBooking = {
             userID : user_id_login,
@@ -121,7 +107,7 @@ var getSubscribers = function(session) {
             date: session.classDate,
             time: session.classTime
           }
-          console.log("IM sending this ", classBooking);
+          //console.log("IM sending this ", classBooking);
 
           var msg = {
             model : "booking",
@@ -132,7 +118,7 @@ var getSubscribers = function(session) {
 
           var subscribersStr = JSON.stringify(subscribers);
 
-          console.log(response.statusCode, body);
+          //console.log(response.statusCode, body);
 
           request({
               url: 'https://transpiredashboard.westeurope.cloudapp.azure.com/queues/push',
@@ -163,7 +149,7 @@ var getSubscribers = function(session) {
 // });
 var user_id_login = null;
 var userIsLoggedin = function(user_session) {
-    console.log(user_session);
+    //console.log(user_session);
     request({
         url: 'http://nuffieldhealth.azurewebsites.net/isLoggedin',
         method: 'POST',
@@ -174,9 +160,9 @@ var userIsLoggedin = function(user_session) {
         if(error) {
             console.log(error);
         } else {
-            console.log(response.statusCode, body);
+            //console.log(response.statusCode, body);
             user_id_login = body[0].user_id;
-            console.log(user_id_login);
+            //console.log(user_id_login);
             //console.log(response.statusCode, body);
             //console.log("THE BODY" + JSOn.parse(body));
     }
@@ -201,7 +187,7 @@ var displayClasses = function(session){
       class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/f7usah8cpqoobxar6brg.jpg";
     }
     info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays, class_img: class_img});
-    console.log(info.length);
+    //console.log(info.length);
     cards.push(createHeroCard(session));
   }
   session.cards = cards;
@@ -230,7 +216,7 @@ var displayClassesAvailable = function(session){
       class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331764/f7usah8cpqoobxar6brg.jpg";
     }
     info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays, class_img: class_img});
-    console.log(info.length);
+    //console.log(info.length);
     cards.push(createHeroCardVersion2(session));
   }
 
@@ -300,8 +286,8 @@ bot.dialog('/', intents);
 intents.matches('Introduction', [
   function (session, args) {
       var user_session = session.message.sourceEvent.clientActivityId;
-      console.log(user_session);
-      console.log(user_session.slice(0, user_session.length-2));
+      //console.log(user_session);
+      //console.log(user_session.slice(0, user_session.length-2));
 
       session.send("Hi there, I am the Nuffield Health bot!");
       session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
@@ -333,7 +319,7 @@ intents.matches('BookClass', [
              console.log(error);
          } else {
              console.log(response.statusCode, body);
-             console.log("THE BODY" + body);
+             //console.log("THE BODY" + body);
      }
      });
 
@@ -373,7 +359,7 @@ intents.matches('BookClass', [
         var classInfo = session.dialogData.classInformation;
             if(results.response) {
                 var date = builder.EntityRecognizer.resolveTime([results.response]);
-                console.log("the date is" + date);
+                //console.log("the date is" + date);
                 session.classDate = date;
                 date = new Date(date);
                 var day = date.getDay();
@@ -383,8 +369,8 @@ intents.matches('BookClass', [
         if(classInfo.title && classInfo.date) {
             //session.classDate = session.dialogData.classInformation.date;
             session.className = session.dialogData.classInformation.title;
-            console.log(session.className);
-            console.log(session.classDate);
+            //console.log(session.className);
+            //console.log(session.classDate);
             //session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
             request({
                 url: 'http://nuffieldhealth.azurewebsites.net/classAvailable',
@@ -397,18 +383,18 @@ intents.matches('BookClass', [
                 if(error) {
                     console.log(error);
                 } else {
-                    console.log(response.statusCode, body);
-                    console.log("THE BODY" + body);
-                    console.log(body.length+ " THE LENGTH");
+                    //console.log(response.statusCode, body);
+                    //console.log("THE BODY" + body);
+                    //console.log(body.length+ " THE LENGTH");
                     if(body.length == 0) {
                       session.send("The class you are looking for doesn't exist for that day, you can view available classes for " + classInfo.day + "!");
                       session.endDialogWithResult({ response: session.dialogData });
                     }
                     else {
                       session.classInformation = body;
-                      console.log(session.classInformation);
+                      //console.log(session.classInformation);
                       session.classTime = body[0].classTime;
-                      console.log(session.classTime);
+                      //console.log(session.classTime);
                       displayClasses(session);
                       var count = 0;
                       var execute = true;
@@ -451,7 +437,7 @@ intents.matches('BookClass', [
             if(error) {
                 console.log(error);
             } else {
-                console.log(response.statusCode, body);
+                //console.log(response.statusCode, body);
                 session.send("Your class is successfully booked!");
                 session.send("Is there anything else you want to do?");
         }
@@ -536,7 +522,7 @@ intents.matches('CancelClass', [
 intents.matches('ViewClass', [
   function (session, args, next) {
     var date = builder.EntityRecognizer.resolveTime(args.entities);
-    console.log("THE DATE IS " + date);
+    //console.log("THE DATE IS " + date);
     var classInfo = session.dialogData.classInfo = {
       date: date ? convertDayToString(date.getDay()) : null
     }
@@ -595,7 +581,7 @@ intents.matches('ActiveBookings', [
             console.log(error);
         } else {
             console.log(response.statusCode, body);
-            console.log("the length"+body.length);
+            //console.log("the length"+body.length);
             if("undefined" === typeof body || body.length == 0)
                 session.send("You don't have any active bookings!");
             else{
