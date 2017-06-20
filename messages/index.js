@@ -32,7 +32,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -323,7 +323,7 @@ intents.matches('BookClass', [
              //console.log("THE BODY" + body);
      }
      });
-
+        console.log(args);
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
         //var date__ = JSON.stringify(args.entities);
@@ -338,6 +338,8 @@ intents.matches('BookClass', [
         };
         if(!classInfo.title) {
           builder.Prompts.text(session, "What is the name of the class you want to book?");
+
+            //session.send("What is the name of the class you want to book?");
         }
         else {
           next();
@@ -345,34 +347,39 @@ intents.matches('BookClass', [
      },
 
    function (session, results, next) {
-        //session.userData.toBeBooked = results.response.entity;
         var classInfo = session.dialogData.classInformation;
         if(results.response) {
-           classInfo.title = results.response;
-        }
-        if(classInfo.title && !classInfo.date) {
-           builder.Prompts.time(session, 'What date would you like to book the class for?');
-        } else {
-           next();
+          builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
+            var result = {};
+            result.intents = intents;
+            result.entities = entities;
+            var className = builder.EntityRecognizer.findEntity(result.entities, 'ClassName');
+            var classTime = builder.EntityRecognizer.resolveTime(result.entities);
+            var date = new Date(classTime);
+            classInfo.title = className.entity;
+            classInfo.date =  date ? date.getDate() : null;
+            classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
+            if(classInfo.title && !classInfo.date)
+              builder.Prompts.time(session, 'What date would you like to book the class for?');
+            else {
+              console.log(classInfo);
+              next();
+            }
+          });
         }
     },
-    function (session, results) {
+    function (session, results, next) {
         var classInfo = session.dialogData.classInformation;
-            if(results.response) {
-                var date = builder.EntityRecognizer.resolveTime([results.response]);
-                //console.log("the date is" + date);
-                session.classDate = date;
-                date = new Date(date);
-                var day = date.getDay();
-                classInfo.date = date ? date.getDate() : null;
-                classInfo.day = day ? convertDayToString(day) : null;
-            }
+        if(results.response) {
+          var date = builder.EntityRecognizer.resolveTime([results.response]);
+          session.classDate = date;
+          date = new Date(date);
+          var day = date.getDay();
+          classInfo.date = date ? date.getDate() : null;
+          classInfo.day = day ? convertDayToString(day) : null;
+        }
         if(classInfo.title && classInfo.date) {
-            //session.classDate = session.dialogData.classInformation.date;
             session.className = session.dialogData.classInformation.title;
-            //console.log(session.className);
-            //console.log(session.classDate);
-            //session.send("Booking "+ classInfo.title + " class on " + classInfo.date+ "...");
             request({
                 url: 'http://nuffieldhealth.azurewebsites.net/classAvailable',
                 method: 'POST',
@@ -595,6 +602,7 @@ intents.matches('ActiveBookings', [
   })
 }
 ]);
+
 
 
 // intents.matches('MedicalQuestion', [
