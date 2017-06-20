@@ -656,6 +656,13 @@ intents.matches('Feedback', [
   }
 ]);
 
+intents.matches('None', [
+  function (session, args) {
+    session.send("I'm sorry but I can't handle your request. Is there anything else you want to do?");
+    session.send("You can book, cancel and view available classes or give feedback through me!");
+  }
+]);
+
 // intents.matches('MedicalQuestion', [
 //   function(session, args, next) {
 //     var partOfBody = builder.EntityRecognizer.findEntity(args.entities, 'partOfBody');
