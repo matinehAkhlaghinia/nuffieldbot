@@ -323,7 +323,6 @@ intents.matches('BookClass', [
              //console.log("THE BODY" + body);
      }
      });
-        console.log(args);
         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
         //var date__ = JSON.stringify(args.entities);
@@ -603,7 +602,59 @@ intents.matches('ActiveBookings', [
 }
 ]);
 
+intents.matches('Feedback', [
+  function (session, args, next) {
 
+      var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+      var classInfo = session.dialogData.classInformation = {
+        title: className ? className.entity : null
+      };
+      if(classInfo.title)
+        builder.Prompts.text(session, "What is your feedback?");
+      else {
+        next();
+      }
+    },
+  function(session, results, next) {
+    var classInfo = session.dialogData.classInformation;
+    if(results.response) {
+      var feedback = results.response;
+      session.send("Thank you for your feedback!");
+      //session.endDialogWithResult({response: feedback});
+    }
+    if(!classInfo.title)
+      builder.Prompts.text(session, "What is the name of the class?");
+    else {
+      next();
+    }
+  },
+  function(session, results) {
+    var classInfo = session.dialogData.classInformation;
+    if(results.response) {
+      builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
+        var result = {};
+        result.intents = intents;
+        result.entities = entities;
+        var className = builder.EntityRecognizer.findEntity(result.entities, 'ClassName');
+        classInfo.title = className.entity;
+        if(classInfo.title)
+          builder.Prompts.text(session, 'What is your feedback for ' + classInfo.title +" class?");
+        else {
+          session.send("Sorry this class does not exist!");
+          session.endDialog();
+        }
+      });
+    }
+  },
+  function(session, results) {
+    if(results.response) {
+      var feedback = results.response;
+      session.send("Thank you for your feedback!");
+      session.endDialog();
+    }
+    session.endDialog();
+  }
+]);
 
 // intents.matches('MedicalQuestion', [
 //   function(session, args, next) {
