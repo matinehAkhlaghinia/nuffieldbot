@@ -70,7 +70,7 @@ var getNuffieldID = function() {
       }
   }, function(error, response, body){
       if(error) {
-          console.log(error);
+          //console.log(error);
       } else {
           var body = JSON.parse(body);
           nuffield_id = body.nuffieldID;
@@ -88,7 +88,7 @@ var getSubscribers = function(session) {
       }
   }, function(error, response, body){
       if(error) {
-          console.log(error);
+          //console.log(error);
       } else {
           var resp = JSON.parse(body);
           var subscribers = [];
@@ -339,6 +339,10 @@ intents.matches('BookClass', [
 
             //session.send("What is the name of the class you want to book?");
         }
+        else if(!classInfo.date) {
+          console.log("hey here1");
+          builder.Prompts.time(session, "what date would you like to book the class for?");
+        }
         else {
           next();
         }
@@ -354,13 +358,13 @@ intents.matches('BookClass', [
             var className = builder.EntityRecognizer.findEntity(result.entities, 'ClassName');
             var classTime = builder.EntityRecognizer.resolveTime(result.entities);
             var date = new Date(classTime);
-            classInfo.title = className.entity;
+            if(className)
+              classInfo.title = className.entity;
             classInfo.date =  date ? date.getDate() : null;
             classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
             if(classInfo.title && !classInfo.date)
               builder.Prompts.time(session, 'What date would you like to book the class for?');
             else {
-              console.log(classInfo);
               next();
             }
           });
@@ -441,9 +445,7 @@ intents.matches('BookClass', [
             }
         }, function(error, response, body){
             if(error) {
-                //console.log(error);
             } else {
-                //console.log(response.statusCode, body);
                 session.send("Your class is successfully booked!");
                 session.send("Is there anything else you want to do?");
         }
@@ -524,11 +526,9 @@ bot.dialog('CancelClass', [
              }
          }, function(error, response, body){
              if(error) {
-                 //console.log(error);
              } else {
-                 //console.log(response.statusCode, body);
 
-         }
+             }
          });
          session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
        }
@@ -670,8 +670,6 @@ intents.matches('ActiveBookings', [
         if(error) {
             //console.log(error);
         } else {
-            console.log(response.statusCode, body);
-            //console.log("the length"+body.length);
             if("undefined" === typeof body || body.length == 0)
                 session.send("You don't have any active bookings!");
             else{
