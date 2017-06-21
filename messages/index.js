@@ -32,7 +32,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -50,6 +50,16 @@ var SigninCardName = 'Sign-in card';
 var AnimationCardName = "Animation card";
 var VideoCardName = "Video card";
 var AudioCardName = "Audio card";
+
+
+
+var prev_bookings = [{
+  user_id: "123",
+  ClassName: "Yoga",
+  classTime: "14:00-16:00",
+  Duration: "2 hours",
+  classDays: "Thursdays"
+}]
 
 //const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
 const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=65e0068c1ddd40afb156232a400b2d14';
@@ -170,10 +180,11 @@ var userIsLoggedin = function(user_session) {
     });
 }
 
-var displayClasses = function(session){
+var displayClasses = function(session, cardType){
   var info = [];
   var cards = [];
   var classInformation = session.classInformation;
+  console.log(classInformation);
   for(var i = 0; i < classInformation.length; i++) {
     info = session.availableClassesInfo = []
     classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
@@ -189,7 +200,10 @@ var displayClasses = function(session){
     }
     info.push({Class_Name: classInformation[i].ClassName, Class_Time: classInformation[i].classTime, Duration: classInformation[i].Duration, Class_Days: classInformation[i].classDays, class_img: class_img});
     //console.log(info.length);
-    cards.push(createHeroCard(session));
+    if(cardType == "prev_bookings")
+      cards.push(createHeroCardForPastBookings(session));
+    else if(cardType == "book_class")
+      cards.push(createHeroCard(session));
   }
   session.cards = cards;
   var cards_carousel = getCardsAttachments(session);
@@ -304,6 +318,16 @@ intents.matches('Introduction', [
 var user_session = "123";
 
 
+
+
+intents.matches('PastBookings', [
+  function (session, args) {
+      session.classInformation = prev_bookings;
+      displayClasses(session, "prev_bookings");
+    }
+]);
+
+
 intents.matches('BookClass', [
    function (session, args, next) {
      //user_session = session.message.sourceEvent.clientActivityId;
@@ -405,7 +429,7 @@ intents.matches('BookClass', [
                       //console.log(session.classInformation);
                       session.classTime = body[0].classTime;
                       //console.log(session.classTime);
-                      displayClasses(session);
+                      displayClasses(session, "book_class");
                       var count = 0;
                       var execute = true;
                       var intervalFunction = function(){
@@ -797,7 +821,20 @@ function createHeroCard(session) {
             builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/identify&skypeSession='+ user_session, 'Book your Class'),
+           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/identify&skypeSession='+ user_session, 'Book your Class')
+        ]);
+}
+
+function createHeroCardForPastBookings(session) {
+    return new builder.HeroCard(session)
+        .title(session.availableClassesInfo[0]["Class_Name"])
+        .subtitle(session.availableClassesInfo[0]["Duration"])
+        .text(session.availableClassesInfo[0]["Class_Time"] + " \n " +session.availableClassesInfo[0]["Class_Days"])
+        .images([
+            builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
+        ])
+        .buttons([
+           builder.CardAction.dialogAction(session, "Book a Class", session.availableClassesInfo[0]["Class_Name"], "Re-book"),
            builder.CardAction.dialogAction(session, "Feedback", "Feedback", "Feedback")
         ]);
 }
