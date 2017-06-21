@@ -505,7 +505,12 @@ bot.dialog('CancelClass', [
        var classTime;
        var classDate;
        if(args.data != undefined) {
-         className = args.data;
+         var info = args.data.split(" ");
+         className = info[0];
+         var parts = info[1].split('/');
+         classDate = new Date(parts[0],parts[1]-1,parts[2]);
+         console.log(info[1]);
+         console.log(classDate);
        }
        else {
          if(args.entities) {
@@ -520,7 +525,7 @@ bot.dialog('CancelClass', [
          //time:  classTime ? classTime.getTime() : null,
          date:  classDate ? classDate.getDate() : null
        };
-
+       console.log("this is the date" +classInfo.date);
        if(!classInfo.title) {
          builder.Prompts.text(session, "What is the name of the class you want to cancel?");
        }
@@ -821,7 +826,7 @@ function createHeroCardVersion3(session) {
             builder.CardImage.create(session, session.bookedClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.dialogAction(session, "Cancel Class", session.bookedClassesInfo[0]["class_name"], "Cancel Your Class")
+           builder.CardAction.dialogAction(session, "Cancel Class", session.bookedClassesInfo[0]["class_name"] + " " + session.bookedClassesInfo[0]["class_date"], "Cancel Your Class")
         ]);
 }
 
