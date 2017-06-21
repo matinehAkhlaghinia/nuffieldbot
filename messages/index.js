@@ -57,6 +57,7 @@ const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
+bot.recognizer(recognizer);
 
 var nuffield_id = null;
 var getNuffieldID = function() {
@@ -235,7 +236,6 @@ var displayMyClasses = function(session){
   var bookingInfo = session.bookingInfo;
   for(var i = 0; i < bookingInfo.length; i++) {
     info = session.bookedClassesInfo = [];
-    //bookingInfo[i].classTime = bookingInfo[i].classTime.replace('.0000000', '');
     var class_img;
     if(bookingInfo[i].class_name == "Yoga") {
       class_img = "http://res.cloudinary.com/dhl2r3xhs/image/upload/v1490331763/j08c1mcdacjquhsr3lib.jpg";
@@ -301,14 +301,13 @@ intents.matches('Introduction', [
 //     }
 // ]);
 
-var user_session;
+var user_session = "123";
 
 
 intents.matches('BookClass', [
    function (session, args, next) {
      //user_session = session.message.sourceEvent.clientActivityId;
      //user_session = user_session.slice(0, user_session.length-2);
-    user_session = "123";
      request({
          url: 'http://nuffieldhealth.azurewebsites.net/addSession',
          method: 'POST',
@@ -458,72 +457,156 @@ intents.matches('BookClass', [
 ]);
 
 
+bot.beginDialogAction('Cancel Class', 'CancelClass');
 
-intents.matches('CancelClass', [
-   function (session, args, next) {
-        var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
-        var classTime = builder.EntityRecognizer.resolveTime(args.entities);
-        var classDate = new Date(classTime);
-        var classInfo = session.dialogData.classInformation = {
-          title: className ? className.entity : null,
-          //time:  classTime ? classTime.getTime() : null,
-          date:  classDate ? classDate.getDate() : null
-        };
-        if(!classInfo.title) {
-          builder.Prompts.text(session, "What is the name of the class you want to cancel?");
-        }
-        else {
-          next();
-        }
-     },
 
-   function (session, results, next) {
-        //session.userData.toBeBooked = results.response.entity;
+bot.dialog('CancelClass', [
+  function (session, args, next) {
+       var classInfo;
+       var className;
+       var classTime;
+       var classDate;
+       if(args.data != undefined) {
+         className = args.data;
+       }
+       else {
+         if(args.entities) {
+           className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
+           classTime = builder.EntityRecognizer.resolveTime(args.entities);
+           classDate = new Date(classTime);
+         }
+       }
 
-        var classInfo = session.dialogData.classInformation;
-        if(results.response) {
-           classInfo.title = results.response;
-        }
-        if(classInfo.title && !classInfo.date) {
-           builder.Prompts.time(session, 'What date would you like to cancel the class for?');
-        } else {
-           next();
-        }
+       classInfo = session.dialogData.classInformation = {
+         title: className ? className : null,
+         //time:  classTime ? classTime.getTime() : null,
+         date:  classDate ? classDate.getDate() : null
+       };
+
+       if(!classInfo.title) {
+         builder.Prompts.text(session, "What is the name of the class you want to cancel?");
+       }
+       else {
+         next();
+       }
     },
 
-    function (session, results) {
-        var classInfo = session.dialogData.classInformation;
-            if(results.response) {
-                var date = builder.EntityRecognizer.resolveTime([results.response]);
-                date = new Date(date);
-                classInfo.date = date ? date.getDate() : null;
-            }
+  function (session, results, next) {
+       //session.userData.toBeBooked = results.response.entity;
 
-        if(classInfo.title && classInfo.date) {
-          request({
-              url: 'http://nuffieldhealth.azurewebsites.net/cancelBooking',
-              method: 'POST',
-              json: {
-                  class_name: "'"+classInfo.title+"'",
-                  class_date: "'"+classInfo.date+"'",
-                  user_session: user_session
-              }
-          }, function(error, response, body){
-              if(error) {
-                  //console.log(error);
-              } else {
-                  //console.log(response.statusCode, body);
+       var classInfo = session.dialogData.classInformation;
+       if(results.response) {
+          classInfo.title = results.response;
+       }
+       if(classInfo.title && !classInfo.date) {
+          builder.Prompts.time(session, 'What date would you like to cancel the class for?');
+       } else {
+          next();
+       }
+   },
 
-          }
-          });
-          session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
-        }
-        else {
-            session.send("OK...Is there anything else you want to do?");
+   function (session, results) {
+       var classInfo = session.dialogData.classInformation;
+           if(results.response) {
+               var date = builder.EntityRecognizer.resolveTime([results.response]);
+               date = new Date(date);
+               classInfo.date = date ? date.getDate() : null;
+           }
+
+       if(classInfo.title && classInfo.date) {
+         request({
+             url: 'http://nuffieldhealth.azurewebsites.net/cancelBooking',
+             method: 'POST',
+             json: {
+                 class_name: "'"+classInfo.title+"'",
+                 class_date: "'"+classInfo.date+"'",
+                 user_session: user_session
+             }
+         }, function(error, response, body){
+             if(error) {
+                 //console.log(error);
+             } else {
+                 //console.log(response.statusCode, body);
+
          }
-        session.endDialogWithResult({ response: session.dialogData });
-    }
-]);
+         });
+         session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
+       }
+       else {
+           session.send("OK...Is there anything else you want to do?");
+        }
+       session.endDialogWithResult({ response: session.dialogData });
+   }
+]).triggerAction({
+    matches: 'CancelClass'
+});
+
+// intents.matches('CancelClass', [
+//    function (session, args, next) {
+//         console.log("there we go " + args.data);
+//         var className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+//         var classTime = builder.EntityRecognizer.resolveTime(args.entities);
+//         var classDate = new Date(classTime);
+//         var classInfo = session.dialogData.classInformation = {
+//           title: className ? className.entity : null,
+//           //time:  classTime ? classTime.getTime() : null,
+//           date:  classDate ? classDate.getDate() : null
+//         };
+//         if(!classInfo.title) {
+//           builder.Prompts.text(session, "What is the name of the class you want to cancel?");
+//         }
+//         else {
+//           next();
+//         }
+//      },
+//
+//    function (session, results, next) {
+//         //session.userData.toBeBooked = results.response.entity;
+//
+//         var classInfo = session.dialogData.classInformation;
+//         if(results.response) {
+//            classInfo.title = results.response;
+//         }
+//         if(classInfo.title && !classInfo.date) {
+//            builder.Prompts.time(session, 'What date would you like to cancel the class for?');
+//         } else {
+//            next();
+//         }
+//     },
+//
+//     function (session, results) {
+//         var classInfo = session.dialogData.classInformation;
+//             if(results.response) {
+//                 var date = builder.EntityRecognizer.resolveTime([results.response]);
+//                 date = new Date(date);
+//                 classInfo.date = date ? date.getDate() : null;
+//             }
+//
+//         if(classInfo.title && classInfo.date) {
+//           request({
+//               url: 'http://nuffieldhealth.azurewebsites.net/cancelBooking',
+//               method: 'POST',
+//               json: {
+//                   class_name: "'"+classInfo.title+"'",
+//                   class_date: "'"+classInfo.date+"'",
+//                   user_session: user_session
+//               }
+//           }, function(error, response, body){
+//               if(error) {
+//                   //console.log(error);
+//               } else {
+//                   //console.log(response.statusCode, body);
+//
+//           }
+//           });
+//           session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
+//         }
+//         else {
+//             session.send("OK...Is there anything else you want to do?");
+//          }
+//         session.endDialogWithResult({ response: session.dialogData });
+//     }
+// ]);
 
 
 intents.matches('ViewClass', [
@@ -716,7 +799,8 @@ function createHeroCard(session) {
             builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/identify&skypeSession='+ user_session, 'Book your Class')
+           builder.CardAction.openUrl(session, 'https://transpiredashboard.westeurope.cloudapp.azure.com/?next=/skype/identify&skypeSession='+ user_session, 'Book your Class'),
+           builder.CardAction.dialogAction(session, "Feedback", "Feedback", "Feedback")
         ]);
 }
 
@@ -733,10 +817,12 @@ function createHeroCardVersion2(session) {
 function createHeroCardVersion3(session) {
     return new builder.HeroCard(session)
         .title(session.bookedClassesInfo[0]["class_name"])
-        .subtitle("")
         .text("Class date: " + session.bookedClassesInfo[0]["class_date"] + " \n " + "Class time: 14:00-16:00")
         .images([
             builder.CardImage.create(session, session.bookedClassesInfo[0]["class_img"])
+        ])
+        .buttons([
+           builder.CardAction.dialogAction(session, "Cancel Class", session.bookedClassesInfo[0]["class_name"], "Cancel Your Class")
         ]);
 }
 
