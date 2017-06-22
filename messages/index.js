@@ -289,31 +289,15 @@ var convertDayToString = function(day) {
   }
 }
 bot.dialog('/', intents);
-//
-// bot.endConversationAction('reset', 'reset').matches('reset', [
-//     function (session, args) {
-//         session.send("Hi there, I am the Nuffield Health bot!");
-//         session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
-//       }
-// ]);
+
+
 
 intents.matches('Introduction', [
   function (session, args) {
       var user_session = session.message.sourceEvent.clientActivityId;
-      //console.log(user_session);
-      //console.log(user_session.slice(0, user_session.length-2));
-
-      session.send("Hi there, I am the Nuffield Health bot!");
-      session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
+      builder.Prompts.choice(session, "What do you want to do today?", "View Previous Bookings|Cancel a Class|View Available Classes| View Active Bookings| View Previous Bookings| Book a Class",{listStyle: builder.ListStyle["button"]});
     }
 ]);
-
-// intents.matches('reset', [
-//   function (session, args) {
-//       session.send("Hi there, I am the Nuffield Health bot!");
-//       session.send("You can manage your class bookings or you can ask me medical questions, what would you like to do today?");
-//     }
-// ]);
 
 var user_session = "123";
 
@@ -328,9 +312,9 @@ intents.matches('PastBookings', [
 ]);
 
 
-bot.beginDialogAction('Book a Class', 'BookClass');
+//bot.beginDialogAction('Book a Class', 'BookClass');
 
-bot.dialog('BookClass', [
+intents.matches('BookClass', [
   function (session, args, next) {
     var classInfo;
     var className;
@@ -354,7 +338,7 @@ bot.dialog('BookClass', [
       className = args.data;
     }
     else {
-      if(args.entities) {
+      if(args.entities.length != 0) {
         className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
         classTime = builder.EntityRecognizer.resolveTime(args.entities);
         classDate = new Date(classTime);
@@ -485,20 +469,18 @@ bot.dialog('BookClass', [
      else {
        session.send("I'm sorry can you tell me again what I can do for you?");
      }
-     session.endDialogWithResult({ response: session.dialogData });
+     session.endDialog();
    }
 
-]).triggerAction({
-    matches: 'BookClass'
-});
+]);
 
 
 
 
-bot.beginDialogAction('Cancel Class', 'CancelClass');
+//bot.beginDialogAction('Cancel Class', 'CancelClass');
 
 
-bot.dialog('CancelClass', [
+intents.matches('CancelClass', [
   function (session, args, next) {
        var classInfo;
        var className;
@@ -513,7 +495,7 @@ bot.dialog('CancelClass', [
          console.log(classDate);
        }
        else {
-         if(args.entities) {
+         if(args.entities != undefined && args.entities.length != 0) {
            className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
            classTime = builder.EntityRecognizer.resolveTime(args.entities);
            classDate = new Date(classTime);
@@ -578,9 +560,7 @@ bot.dialog('CancelClass', [
         }
        session.endDialogWithResult({ response: session.dialogData });
    }
-]).triggerAction({
-    matches: 'CancelClass'
-});
+]);
 
 intents.matches('ViewClass', [
   function (session, args, next) {
