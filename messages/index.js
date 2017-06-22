@@ -302,10 +302,9 @@ intents.matches('Introduction', [
         console.log(results.response.entity);
         if(results.response.entity == "Book a Class")
           session.beginDialog('BookClass');
-        // else if(results.response.entity == "Cancel a Class")
-        //   session.beginDialog('CancelClass');
+
       }
-      session.endDialog();
+
     }
 ]);
 
@@ -485,11 +484,6 @@ intents.matches('BookClass', [
 ]);
 
 
-
-
-//bot.beginDialogAction('Cancel Class', 'CancelClass');
-
-
 // intents.matches('CancelClass', [
 //   function (session, args, next) {
 //        var classInfo;
@@ -618,6 +612,7 @@ intents.matches('BookClass', [
 //
 // ]);
 
+bot.beginDialogAction('Cancel Class', 'CancelClass');
 
 bot.dialog('CancelClass', [
     function (session, args, next) {
