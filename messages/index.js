@@ -302,7 +302,7 @@ bot.dialog('/', intents);
 intents.matches('Introduction', [
   function (session, args) {
       var user_session = session.message.sourceEvent.clientActivityId;
-      builder.Prompts.choice(session, "What do you want to do today?", "View Previous Bookings|Cancel a Class|View Available Classes| View Active Bookings| View Previous Bookings| Book a Class",{listStyle: builder.ListStyle["button"]});
+      builder.Prompts.choice(session, "What do you want to do today?", "View Previous Bookings|Cancel Booking|View Available Classes| View Active Bookings| Book a Class",{listStyle: builder.ListStyle["button"]});
     },
   function(session, results) {
       if(results.response) {
@@ -453,7 +453,15 @@ intents.matches('BookClass', [
   },
   function (session, results, next) {
      var classInfo = session.dialogData.classInformation;
-     var checkIfOneWord = results.response.entity.split(" "); //this is to check if user's reply is one word no need to scan
+     console.log("the response is " + results.response);
+     if(results.response != undefined) {
+       if(results.response.entity != undefined)
+         var checkIfOneWord = results.response.entity.split(" ");
+       else {
+         var checkIfOneWord = results.response.split(" ");
+       }
+     }
+        //this is to check if user's reply is one word no need to scan
      if(results.response && checkIfOneWord.length > 1) {
        builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
          var result = {};
