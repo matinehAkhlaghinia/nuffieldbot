@@ -352,6 +352,7 @@ intents.matches('CancelClass', [
            }
            else {
              if(args.entities != undefined && args.entities.length != 0) {
+               console.log(args.entities);
                className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
                classTime = builder.EntityRecognizer.resolveTime(args.entities);
                classDate = new Date(classTime);
@@ -428,38 +429,32 @@ intents.matches('BookClass', [
         className = args.data;
       }
       else if(args.entities != null && args.entities.length != 0) {
-        console.log("1");
-        className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
+        var nameEntity = builder.EntityRecognizer.findEntity(args.entities, 'ClassName');
+        if(nameEntity != null)
+          className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
         classTime = builder.EntityRecognizer.resolveTime(args.entities);
         classDate = new Date(classTime);
       }
     }
-    console.log("3");
-    console.log("3"+ className);
-    console.log("3"+classTime);
     classInfo = session.dialogData.classInformation = {
       title: className ? className : null,
       date:  classDate ? classDate.getDate() : null,
       day: classTime ? convertDayToString(classTime.getDay()) : null
     };
-       if(!classInfo.title) {
-         builder.Prompts.text(session, "What is the name of the class you want to book?");
-
-           //session.send("What is the name of the class you want to book?");
-       }
-       else if(!classInfo.date) {
-         console.log("hey here1");
-         builder.Prompts.time(session, "what date would you like to book the class for?");
-       }
-       else {
-         next();
-       }
-
+    if(!classInfo.title) {
+      builder.Prompts.text(session, "What is the name of the class you want to book?");
+    }
+    else if(!classInfo.date) {
+      builder.Prompts.time(session, "what date would you like to book the class for?");
+    }
+    else {
+      next();
+    }
   },
   function (session, results, next) {
-    console.log("hey");
      var classInfo = session.dialogData.classInformation;
-     if(results.response) {
+     var checkIfOneWord = results.response.split(" "); //this is to check if user's reply is one word no need to scan
+     if(results.response && checkIfOneWord.length > 1) {
        builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
          var result = {};
          result.intents = intents;
@@ -477,6 +472,13 @@ intents.matches('BookClass', [
            next();
          }
        });
+     }
+     else if(!classInfo.name && results.response) {
+       classInfo.title = results.response;
+     }
+
+     if(classInfo.title && !classInfo.date){
+       builder.Prompts.time(session, 'What date would you like to book the class for?');
      }
      else {
        next();
@@ -818,7 +820,7 @@ function createHeroCardVersion3(session) {
             builder.CardImage.create(session, session.bookedClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.imBack(session, "Cancel " + session.bookedClassesInfo[0]["class_name"]+" class", "Cancel Your Class")
+           builder.CardAction.imBack(session, "Cancel " + session.bookedClassesInfo[0]["class_name"]+" class for July 14th 2017", "Cancel Your Class")
         ]);
 }
 
