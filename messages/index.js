@@ -453,7 +453,7 @@ intents.matches('BookClass', [
   },
   function (session, results, next) {
      var classInfo = session.dialogData.classInformation;
-     var checkIfOneWord = results.response.split(" "); //this is to check if user's reply is one word no need to scan
+     var checkIfOneWord = results.response.entity.split(" "); //this is to check if user's reply is one word no need to scan
      if(results.response && checkIfOneWord.length > 1) {
        builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
          var result = {};
@@ -473,8 +473,14 @@ intents.matches('BookClass', [
          }
        });
      }
-     else if(!classInfo.name && results.response) {
+     else if(!classInfo.title && results.response) {
        classInfo.title = results.response;
+     }
+     else {
+       var classTime = builder.EntityRecognizer.resolveTime([results.response]);
+       var date = new Date(classTime);
+       classInfo.date =  date ? date.getDate() : null;
+       classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
      }
 
      if(classInfo.title && !classInfo.date){
