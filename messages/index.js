@@ -335,8 +335,6 @@ var add_user_session = function() {
 }
 
 
-
-
 intents.matches('CancelClass', [
     function (session, args, next) {
          var classInfo;
@@ -652,20 +650,23 @@ intents.matches('ActiveBookings', [
 }
 ]);
 
-bot.beginDialogAction('Feedback', 'Feedback');
 
-bot.dialog('Feedback', [
+
+intents.matches('Feedback', [
   function (session, args, next) {
     var classInfo;
     var className;
-    if(args.data != undefined) {
-      className = args.data;
-    }
-    else {
-      if(args.entities) {
-        className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
+    if(args != undefined) {
+      if(args.data != undefined) {
+        className = args.data;
+      }
+      else {
+        if(args.entities != undefined && args.entities.length != 0) {
+          className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
+        }
       }
     }
+
 
     classInfo = session.dialogData.classInformation = {
       title: className ? className : null,
@@ -718,13 +719,8 @@ bot.dialog('Feedback', [
     }
     session.endDialog();
   }
-]).triggerAction({
-    matches: 'Feedback'
-});
-
-intents.matches('Feedback', [
-
 ]);
+
 
 intents.matches('None', [
   function (session, args) {
@@ -799,8 +795,8 @@ function createHeroCardForPastBookings(session) {
             builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.dialogAction(session, "Book a Class", session.availableClassesInfo[0]["Class_Name"], "Re-book"),
-           builder.CardAction.dialogAction(session, "Feedback", session.availableClassesInfo[0]["Class_Name"], "Feedback")
+           builder.CardAction.imBack(session, "Book a "+ session.availableClassesInfo[0]["Class_Name"]+ " Class", "Re-book"),
+           builder.CardAction.imBack(session, "I want to give Feedback for my "+session.availableClassesInfo[0]["Class_Name"]+ " class" , "Feedback")
         ]);
 }
 
@@ -822,7 +818,7 @@ function createHeroCardVersion3(session) {
             builder.CardImage.create(session, session.bookedClassesInfo[0]["class_img"])
         ])
         .buttons([
-           builder.CardAction.dialogAction(session, "Cancel a Class", session.bookedClassesInfo[0]["class_name"] + " " + session.bookedClassesInfo[0]["class_date"], "Cancel Your Class")
+           builder.CardAction.imBack(session, "Cancel " + session.bookedClassesInfo[0]["class_name"]+" class", "Cancel Your Class")
         ]);
 }
 
