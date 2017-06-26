@@ -62,7 +62,7 @@ var prev_bookings = [{
 }]
 
 //const LuisModelUrl = 'https://api.projectoxford.ai/luis/v1/application?id=077297b8-f0f0-496a-8b6a-362eb36ef53f&subscription-key=4bfee3fdd12e428ba1424426479fc04a';
-const LuisModelUrl = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/077297b8-f0f0-496a-8b6a-362eb36ef53f?subscription-key=65e0068c1ddd40afb156232a400b2d14';
+const LuisModelUrl = 'https://westcentralus.api.cognitive.microsoft.com/luis/v2.0/apps/bda580f2-0330-4954-85af-967d8f42c333?subscription-key=66d4f2e287084ec5974c3de41632689d&verbose=true';
 
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
