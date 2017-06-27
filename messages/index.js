@@ -144,7 +144,7 @@ var getSubscribers = function(session) {
               console.log(err);
               return
             } else if(resp.statusCode != 200){
-              console.log(resp.statusCode, body);
+              //console.log(resp.statusCode, body);
             }
           });
   }
@@ -175,7 +175,7 @@ var displayClasses = function(session, cardType){
   var info = [];
   var cards = [];
   var classInformation = session.classInformation;
-  console.log(classInformation);
+  //console.log(classInformation);
   for(var i = 0; i < classInformation.length; i++) {
     info = session.availableClassesInfo = []
     classInformation[i].classTime = classInformation[i].classTime.replace('.0000000', '');
@@ -353,12 +353,12 @@ intents.matches('CancelClass', [
              className = info[0];
              var parts = info[1].split('/');
              classDate = new Date(parts[0],parts[1]-1,parts[2]);
-             console.log(info[1]);
-             console.log(classDate);
+             //console.log(info[1]);
+             //console.log(classDate);
            }
            else {
              if(args.entities != undefined && args.entities.length != 0) {
-               console.log(args.entities);
+               //console.log(args.entities);
                className = builder.EntityRecognizer.findEntity(args.entities, 'ClassName').entity;
                classTime = builder.EntityRecognizer.resolveTime(args.entities);
                classDate = new Date(classTime);
