@@ -32,7 +32,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-useEmulator = true;
+//useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -740,8 +740,12 @@ intents.matches('Feedback', [
       session.send("Thank you for your feedback!");
       //session.endDialogWithResult({response: feedback});
     }
-    if(!classInfo.title)
-      builder.Prompts.text(session, "What is the name of the class?");
+    if(!classInfo.title){
+      session.send("These are your previous bookings:")
+      session.classInformation = prev_bookings;
+      displayClasses(session, "prev_bookings");
+      builder.Prompts.text(session,"You can either choose one or type in the name and the date of the one you want to give feedback for!")
+    }
     else {
       next();
     }
@@ -766,6 +770,7 @@ intents.matches('Feedback', [
   },
   function(session, results) {
     if(results.response) {
+      var classInfo = session.dialogData.classInformation;
       var feedback = results.response;
       session.send("Your feedback for " + classInfo.title + " class was recorded successfully.");
       session.send("Thank you for your feedback!");
