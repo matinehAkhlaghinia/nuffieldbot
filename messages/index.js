@@ -642,27 +642,30 @@ intents.matches('BookClass', [
 
 intents.matches('ActiveBookings', [
   function(session, args, next) {
-    request({
-        url: 'http://nuffieldhealth.azurewebsites.net/ActiveBookings', //URL to hit
-        method: 'POST',
-        //Lets post the following key/values as form
-        json: {
-            userID: user_session ? user_session : null
-        }
-    }, function(error, response, body){
-        if(error) {
-            //console.log(error);
-        } else {
-            if("undefined" === typeof body || body.length == 0)
-                session.send("You don't have any active bookings!");
-            else{
-                session.bookingInfo = body;
-                displayMyClasses(session);
-            }
-
-            session.endDialogWithResult({ response: session.bookingInfo });
-    }
-  })
+  //   request({
+  //       url: 'http://nuffieldhealth.azurewebsites.net/ActiveBookings', //URL to hit
+  //       method: 'POST',
+  //       //Lets post the following key/values as form
+  //       json: {
+  //           userID: user_session ? user_session : null
+  //       }
+  //   }, function(error, response, body){
+  //       if(error) {
+  //           //console.log(error);
+  //       } else {
+  //           if("undefined" === typeof body || body.length == 0)
+  //               session.send("You don't have any active bookings!");
+  //           else{
+  //               session.bookingInfo = body;
+  //               displayMyClasses(session);
+  //           }
+  //
+  //           session.endDialogWithResult({ response: session.bookingInfo });
+  //   }
+  // })
+  var body = [{class_name: "Zumba", class_date: "14/07/2017"}]
+  session.bookingInfo = body;
+  displayMyClasses(session);
 }
 ]);
 
