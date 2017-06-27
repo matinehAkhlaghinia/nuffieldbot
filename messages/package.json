@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "botbuilder": "^3.7.0",
+    "botbuilder": "^3.8.4",
     "botbuilder-azure": "^3.0.2",
-    "restify": "^4.3.0",
-    "cloudinary": "^1.8.0"
+    "cloudinary": "^1.8.0",
+    "restify": "^4.3.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
