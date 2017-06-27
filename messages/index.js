@@ -34,6 +34,8 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 var useEmulator = (process.env.NODE_ENV == 'development');
 //useEmulator = true;
 
+
+
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
     appPassword: process.env['MicrosoftAppPassword'],
@@ -741,9 +743,9 @@ intents.matches('Feedback', [
       //session.endDialogWithResult({response: feedback});
     }
     if(!classInfo.title){
-      session.send("These are your previous bookings:")
-      session.classInformation = prev_bookings;
-      displayClasses(session, "prev_bookings");
+    //  session.send("These are your previous bookings:")
+    //  session.classInformation = prev_bookings;
+    //  displayClasses(session, "prev_bookings");
       builder.Prompts.text(session,"You can either choose one or type in the name and the date of the one you want to give feedback for!")
     }
     else {
@@ -772,10 +774,10 @@ intents.matches('Feedback', [
     if(results.response) {
       var classInfo = session.dialogData.classInformation;
       var feedback = results.response;
-      session.send("Your feedback for " + classInfo.title + " class was recorded successfully.");
+      ///session.send("Your feedback for " + classInfo.title + " class was recorded successfully.");
       session.send("Thank you for your feedback!");
       session.send("Is there anything else that I can do for you?");
-      session.send("You can see what else you can do by typing 'menu or options'");
+      ///session.send("You can see what else you can do by typing 'menu or options'");
       session.endDialog();
     }
     session.endDialog();
