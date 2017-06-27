@@ -299,20 +299,24 @@ bot.dialog('/', intents);
 
 
 
+
 intents.matches('Introduction', [
-  function (session, args) {
-      var user_session = session.message.sourceEvent.clientActivityId;
-      builder.Prompts.choice(session, "What do you want to do today?", "View Previous Bookings|Cancel Booking|View Available Classes| View Active Bookings| Book a Class",{listStyle: builder.ListStyle["button"]});
-    },
-  function(session, results) {
-      if(results.response) {
-        console.log(results.response.entity);
-
-
-      }
-
-    }
+  // function (session, args) {
+  //     var user_session = session.message.sourceEvent.clientActivityId;
+  //     builder.Prompts.choice(session, "What do you want to do today?", "View Available Classes |Book a Class |Cancel a Class |View Active Bookings |View Previous Bookings |Give Feedback",{listStyle: builder.ListStyle["button"]});
+  //   },
+  // function(session, results) {
+  //     if(results.response) {
+  //       bot.beginDialogAction(results.response.entity, '/');
+  //     }
+  //   }
+  function(session, args) {
+    var card = createHeroCardForIntro(session);
+    var msg = new builder.Message(session).addAttachment(card);
+    session.send(msg);
+  }
 ]);
+
 
 var user_session = "123";
 
@@ -831,6 +835,19 @@ function createHeroCardForPastBookings(session) {
         .buttons([
            builder.CardAction.imBack(session, "Book a "+ session.availableClassesInfo[0]["Class_Name"]+ " Class", "Re-book"),
            builder.CardAction.imBack(session, "I want to give Feedback for my "+session.availableClassesInfo[0]["Class_Name"]+ " class" , "Feedback")
+        ]);
+}
+
+function createHeroCardForIntro(session) {
+    return new builder.HeroCard(session)
+        .title("What do you want to do today?")
+        .subtitle(" ")
+        .buttons([
+           builder.CardAction.imBack(session, "View Available Classes", "View Available Classes"),
+           builder.CardAction.imBack(session, "Book a Class", "Book a Class"),
+           builder.CardAction.imBack(session, "Cancel a Class", "Cancel a Class"),
+           builder.CardAction.imBack(session, "View Active Bookings", "View Active Bookings"),
+           builder.CardAction.imBack(session, "Book Previous Bookings", "View Previous Bookings")
         ]);
 }
 
