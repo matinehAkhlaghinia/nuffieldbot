@@ -409,12 +409,22 @@ intents.matches('CancelClass', [
            //
           //      }
           //  });
-           session.send("Canceling "+ classInfo.title + " class on " + classInfo.date);
+
+           builder.Prompts.text(session,"Can I confirm that you want to cancel your "+ classInfo.title + " class on " + classInfo.date + "?");
          }
          else {
              session.send("OK...Is there anything else you want to do?");
           }
-         session.endDialogWithResult({ response: session.dialogData });
+     },
+     function(session, results) {
+       if(results.response == "yes" || results.response == "Yes" || results.response == "Sure" || results.response == "sure") {
+         session.send("Your class is successfully canceled!");
+         session.send("Is there anything else you want to do?");
+       }
+       else {
+         session.send("I'm sorry can you tell me again what I can do for you?");
+       }
+       session.endDialog();
      }
 ]);
 
