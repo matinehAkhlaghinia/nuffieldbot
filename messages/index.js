@@ -743,9 +743,9 @@ intents.matches('Feedback', [
       //session.endDialogWithResult({response: feedback});
     }
     if(!classInfo.title){
-    //  session.send("These are your previous bookings:")
-    //  session.classInformation = prev_bookings;
-    //  displayClasses(session, "prev_bookings");
+     session.send("These are your previous bookings:")
+     session.classInformation = prev_bookings;
+     displayClasses(session, "prev_bookings");
       builder.Prompts.text(session,"You can either choose one or type in the name and the date of the one you want to give feedback for!")
     }
     else {
