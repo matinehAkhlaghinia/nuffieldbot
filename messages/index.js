@@ -32,7 +32,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
@@ -313,7 +313,9 @@ intents.matches('Introduction', [
   function(session, args) {
     var card = createHeroCardForIntro(session);
     var msg = new builder.Message(session).addAttachment(card);
+    session.send("You can either choose from the options below or say for example 'View Available Classes'");
     session.send(msg);
+
   }
 ]);
 
@@ -371,6 +373,7 @@ intents.matches('CancelClass', [
 
          if(!classInfo.title) {
            builder.Prompts.text(session, "What is the name of the class you want to cancel?");
+           session.send("You can say for example 'Yoga class'");
          }
          else {
            next();
@@ -386,6 +389,7 @@ intents.matches('CancelClass', [
          }
          if(classInfo.title && !classInfo.date) {
             builder.Prompts.time(session, 'What date would you like to cancel the class for?');
+            session.send("You can say for example 'next Thursday'");
          } else {
             next();
          }
@@ -424,6 +428,7 @@ intents.matches('CancelClass', [
        if(results.response == "yes" || results.response == "Yes" || results.response == "Sure" || results.response == "sure") {
          session.send("Your class is successfully canceled!");
          session.send("Is there anything else you want to do?");
+         session.send("You can say 'Menu' to see what else you can do!")
        }
        else {
          session.send("I'm sorry can you tell me again what I can do for you?");
@@ -457,9 +462,11 @@ intents.matches('BookClass', [
     };
     if(!classInfo.title) {
       builder.Prompts.text(session, "What is the name of the class you want to book?");
+      session.send("You can say for example 'Yoga class for next Thursday'");
     }
     else if(!classInfo.date) {
       builder.Prompts.time(session, "what date would you like to book the class for?");
+      session.send("You can say for example 'this Tuesday'");
     }
     else {
       next();
@@ -487,8 +494,10 @@ intents.matches('BookClass', [
            classInfo.title = className.entity;
          classInfo.date =  date ? date.getDate() : null;
          classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
-         if(classInfo.title && !classInfo.date)
+         if(classInfo.title && !classInfo.date){
            builder.Prompts.time(session, 'What date would you like to book the class for?');
+           session.send("You can say for example 'this Tuesday'");
+         }
          else {
            next();
          }
@@ -506,6 +515,7 @@ intents.matches('BookClass', [
 
      if(classInfo.title && !classInfo.date){
        builder.Prompts.time(session, 'What date would you like to book the class for?');
+       session.send("You can say for example 'this Tuesday'");
      }
      else {
        next();
@@ -594,6 +604,7 @@ intents.matches('BookClass', [
     //  });
      session.send("Your class is successfully booked!");
      session.send("Is there anything else you want to do?");
+     session.send("You can see what else you can do by typing 'menu or options'");
    }
    else {
      session.send("I'm sorry can you tell me again what I can do for you?");
@@ -617,6 +628,7 @@ intents.matches('BookClass', [
       }
       if(!classInfo.date) {
         builder.Prompts.time(session, "For what date do you want to view available classes?");
+        session.send("You can say for example 'this Tuesday'");
       }
       else {
         next();
@@ -648,6 +660,8 @@ intents.matches('BookClass', [
         var body = [{classTime: "14:00-16:00", Duration: "2 hours", classDays: "Thursday", ClassName: "Yoga"}];
         session.classInformation = body;
         displayClassesAvailable(session);
+        session.send("Is there anything else that I can do for you?");
+        session.send("You can see what else you can do by typing 'menu or options'");
       }
       else {
         session.send("Sorry I didn't recognize the class information");
@@ -685,6 +699,8 @@ intents.matches('ActiveBookings', [
   var body = [{class_name: "Zumba", class_date: "14/07/2017"}]
   session.bookingInfo = body;
   displayMyClasses(session);
+  session.send("Is there anything else that I can do for you?");
+  session.send("You can see what else you can do by typing 'menu or options'");
 }
 ]);
 
@@ -753,6 +769,8 @@ intents.matches('Feedback', [
       var feedback = results.response;
       session.send("Your feedback for " + classInfo.title + " class was recorded successfully.");
       session.send("Thank you for your feedback!");
+      session.send("Is there anything else that I can do for you?");
+      session.send("You can see what else you can do by typing 'menu or options'");
       session.endDialog();
     }
     session.endDialog();
