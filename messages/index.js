@@ -453,7 +453,6 @@ intents.matches('BookClass', [
   },
   function (session, results, next) {
      var classInfo = session.dialogData.classInformation;
-     console.log("the response is " + results.response);
      if(results.response != undefined) {
        if(results.response.entity != undefined)
          var checkIfOneWord = results.response.entity.split(" ");
@@ -484,7 +483,7 @@ intents.matches('BookClass', [
      else if(!classInfo.title && results.response) {
        classInfo.title = results.response;
      }
-     else {
+     else if(!classInfo.date && results.response){
        var classTime = builder.EntityRecognizer.resolveTime([results.response]);
        var date = new Date(classTime);
        classInfo.date =  date ? date.getDate() : null;
@@ -632,7 +631,7 @@ intents.matches('BookClass', [
         //         displayClassesAvailable(session);
         // }
         // });
-        var body = [{classTime: "14:00-16:00", Duration: "2 hours", classDays: "Thursdays", ClassName: "Yoga"}];
+        var body = [{classTime: "14:00-16:00", Duration: "2 hours", classDays: "Thursday", ClassName: "Yoga"}];
         session.classInformation = body;
         displayClassesAvailable(session);
       }
@@ -832,6 +831,9 @@ function createHeroCardVersion2(session) {
         .text(session.availableClassesInfo[0]["Class_Time"] + " \n " +session.availableClassesInfo[0]["Class_Days"])
         .images([
             builder.CardImage.create(session, session.availableClassesInfo[0]["class_img"])
+        ])
+        .buttons([
+           builder.CardAction.imBack(session, "Book a "+ session.availableClassesInfo[0]["Class_Name"]+ " Class for next "+ session.availableClassesInfo[0]["Class_Days"], "Book")
         ]);
 }
 
