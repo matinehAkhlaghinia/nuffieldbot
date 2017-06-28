@@ -73,7 +73,7 @@ bot.recognizer(recognizer);
 
 var bot = new builder.UniversalBot(connector, {
     localizerSettings: {
-        defaultLocale: "en" 
+        defaultLocale: "en"
     }
 });
 
@@ -449,7 +449,7 @@ intents.matches('CancelClass', [
 
 intents.matches('BookClass', [
   function(session, args, next) {
-    //session.send("You can say for example 'Yoga class for next Thursday'");
+    session.send("You can say for example 'I want to book Yoga class");
     var classInfo, className, classTime, classDate;
     add_user_session();
     if(args != null) {
