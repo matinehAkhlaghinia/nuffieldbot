@@ -449,7 +449,6 @@ intents.matches('CancelClass', [
 
 intents.matches('BookClass', [
   function(session, args, next) {
-    session.send("You can say for example 'I want to book Yoga class");
     var classInfo, className, classTime, classDate;
     add_user_session();
     if(args != null) {
@@ -469,8 +468,10 @@ intents.matches('BookClass', [
       date:  classDate ? classDate.getDate() : null,
       day: classTime ? convertDayToString(classTime.getDay()) : null
     };
+    console.log(classInfo.date);
     if(!classInfo.title) {
       builder.Prompts.text(session, "What is the name of the class you want to book?");
+      //session.send("You can say for example 'I want to book Yoga class");
     }
     else if(!classInfo.date) {
       builder.Prompts.time(session, "what date would you like to book the class for?");
@@ -481,27 +482,31 @@ intents.matches('BookClass', [
   },
   function (session, results, next) {
     console.log("hi");
-     var classInfo = session.dialogData.classInformation;
-     if(results.response != undefined) {
-       if(results.response.entity != undefined)
-         var checkIfOneWord = results.response.entity.split(" ");
-       else {
-         var checkIfOneWord = results.response.split(" ");
-       }
-     }
+    var classInfo = session.dialogData.classInformation;
+    //  if(results.response != undefined) {
+    //    if(results.response.entity != undefined)
+    //      var checkIfOneWord = results.response.entity.split(" ");
+    //    else {
+    //      var checkIfOneWord = results.response.split(" ");
+    //    }
+    //  }
         //this is to check if user's reply is one word no need to scan
-     if(results.response && checkIfOneWord.length > 1) {
+     if(results.response) {
+       console.log("hey here");
        builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
          var result = {};
          result.intents = intents;
          result.entities = entities;
+         //console.log(result);
          var className = builder.EntityRecognizer.findEntity(result.entities, 'ClassName');
          var classTime = builder.EntityRecognizer.resolveTime(result.entities);
          var date = new Date(classTime);
          if(className)
            classInfo.title = className.entity;
-         classInfo.date =  date ? date.getDate() : null;
-         classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
+         if(classTime) {
+           classInfo.date =  date ? date.getDate() : null;
+           classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
+         }
          if(classInfo.title && !classInfo.date){
            builder.Prompts.time(session, 'What date would you like to book the class for?');
          }
@@ -510,22 +515,22 @@ intents.matches('BookClass', [
          }
        });
      }
-     else if(!classInfo.title && results.response) {
-       classInfo.title = results.response;
-     }
-     else if(!classInfo.date && results.response){
-       var classTime = builder.EntityRecognizer.resolveTime([results.response]);
-       var date = new Date(classTime);
-       classInfo.date =  date ? date.getDate() : null;
-       classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
-     }
+    //  else if(!classInfo.title && results.response) {
+    //    classInfo.title = results.response;
+    //  }
+    //  else if(!classInfo.date && results.response){
+    //    var classTime = builder.EntityRecognizer.resolveTime([results.response]);
+    //    var date = new Date(classTime);
+    //    classInfo.date =  date ? date.getDate() : null;
+    //    classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
+    //  }
+     //
+    //  if(classInfo.title && !classInfo.date){
+    //    builder.Prompts.time(session, 'What date would you like to book the class for?');
+    //  }
+    //  else {
+    //    next();
 
-     if(classInfo.title && !classInfo.date){
-       builder.Prompts.time(session, 'What date would you like to book the class for?');
-     }
-     else {
-       next();
-     }
  },
  function (session, results, next) { //here comes the problem
      var classInfo = session.dialogData.classInformation;
@@ -537,6 +542,8 @@ intents.matches('BookClass', [
        classInfo.date = date ? date.getDate() : null;
        classInfo.day = day ? convertDayToString(day) : null;
      }
+     console.log(classInfo.title);
+     console.log(classInfo.date);
      if(classInfo.title && classInfo.date) {
          session.className = session.dialogData.classInformation.title;
         //  request({
