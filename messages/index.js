@@ -445,6 +445,10 @@ intents.matches('CancelClass', [
      }
 ]);
 
+var checkForAvailableClasses = function(body, session) {
+  session.classInformation = body;
+  displayClassesAvailable(session);
+}
 
 
 intents.matches('BookClass', [
@@ -470,10 +474,19 @@ intents.matches('BookClass', [
     };
     console.log(classInfo.date);
     if(!classInfo.title) {
+      if(classInfo.date) {
+        session.send("These are the available classes for that date:");
+        var body = [{classTime: "14:00-16:00", Duration: "2 hours", classDays: "Thursday", ClassName: "Yoga"},
+        {classTime: "17:00-19:00", Duration: "2 hours", classDays: "Thursday", ClassName: "Zumba"}];
+        checkForAvailableClasses(body, session);
+      }
       builder.Prompts.text(session, "What is the name of the class you want to book?");
       session.send("You can say for example 'I want to book Yoga class'");
     }
     else if(!classInfo.date) {
+      session.send("These are the available " + classInfo.title  +" classes");
+      var body = [{classTime: "14:00-16:00", Duration: "2 hours", classDays: "Thursday", ClassName: "Yoga"}];
+      checkForAvailableClasses(body, session);
       builder.Prompts.time(session, "what date would you like to book the class for?");
     }
     else {
@@ -481,7 +494,6 @@ intents.matches('BookClass', [
     }
   },
   function (session, results, next) {
-    console.log("hi");
     var classInfo = session.dialogData.classInformation;
     //  if(results.response != undefined) {
     //    if(results.response.entity != undefined)
@@ -492,7 +504,6 @@ intents.matches('BookClass', [
     //  }
         //this is to check if user's reply is one word no need to scan
      if(results.response) {
-       console.log("hey here");
        builder.LuisRecognizer.recognize(session.message.text, LuisModelUrl, function (err, intents, entities) {
          var result = {};
          result.intents = intents;
@@ -508,6 +519,9 @@ intents.matches('BookClass', [
            classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
          }
          if(classInfo.title && !classInfo.date){
+           var body = [{classTime: "14:00-16:00", Duration: "2 hours", classDays: "Thursday", ClassName: "Yoga"}];
+           session.classInformation = body;
+           displayClassesAvailable(session);
            builder.Prompts.time(session, 'What date would you like to book the class for?');
          }
          else {
