@@ -463,12 +463,12 @@ intents.matches('BookClass', [
       day: classTime ? convertDayToString(classTime.getDay()) : null
     };
     if(!classInfo.title) {
-      builder.Prompts.text(session, "What is the name of the class you want to book?");
       session.send("You can say for example 'Yoga class for next Thursday'");
+      builder.Prompts.text(session, "What is the name of the class you want to book?");
     }
     else if(!classInfo.date) {
-      builder.Prompts.time(session, "what date would you like to book the class for?");
       session.send("You can say for example 'this Tuesday'");
+      builder.Prompts.time(session, "what date would you like to book the class for?");
     }
     else {
       next();
