@@ -471,7 +471,7 @@ intents.matches('BookClass', [
     console.log(classInfo.date);
     if(!classInfo.title) {
       builder.Prompts.text(session, "What is the name of the class you want to book?");
-      //session.send("You can say for example 'I want to book Yoga class");
+      session.send("You can say for example 'I want to book Yoga class'");
     }
     else if(!classInfo.date) {
       builder.Prompts.time(session, "what date would you like to book the class for?");
