@@ -32,7 +32,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-useEmulator = true;
+//useEmulator = true;
 
 
 
