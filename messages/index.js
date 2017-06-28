@@ -443,6 +443,7 @@ intents.matches('CancelClass', [
 
 intents.matches('BookClass', [
   function(session, args, next) {
+    session.send("You can say for example 'Yoga class for next Thursday'");
     var classInfo, className, classTime, classDate;
     add_user_session();
     if(args != null) {
@@ -463,11 +464,9 @@ intents.matches('BookClass', [
       day: classTime ? convertDayToString(classTime.getDay()) : null
     };
     if(!classInfo.title) {
-      session.send("You can say for example 'Yoga class for next Thursday'");
       builder.Prompts.text(session, "What is the name of the class you want to book?");
     }
     else if(!classInfo.date) {
-      session.send("You can say for example 'this Tuesday'");
       builder.Prompts.time(session, "what date would you like to book the class for?");
     }
     else {
@@ -498,7 +497,6 @@ intents.matches('BookClass', [
          classInfo.day = classTime ? convertDayToString(classTime.getDay()) : null;
          if(classInfo.title && !classInfo.date){
            builder.Prompts.time(session, 'What date would you like to book the class for?');
-           session.send("You can say for example 'this Tuesday'");
          }
          else {
            next();
@@ -517,7 +515,6 @@ intents.matches('BookClass', [
 
      if(classInfo.title && !classInfo.date){
        builder.Prompts.time(session, 'What date would you like to book the class for?');
-       session.send("You can say for example 'this Tuesday'");
      }
      else {
        next();
