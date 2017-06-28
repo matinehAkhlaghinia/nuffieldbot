@@ -529,6 +529,9 @@ intents.matches('BookClass', [
          }
        });
      }
+     else {
+       next();
+     }
     //  else if(!classInfo.title && results.response) {
     //    classInfo.title = results.response;
     //  }
