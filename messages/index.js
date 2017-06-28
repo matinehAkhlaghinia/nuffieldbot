@@ -32,7 +32,7 @@ cloudinary.uploader.upload("pilates.jpg", function(result) {
 });
 
 var useEmulator = (process.env.NODE_ENV == 'development');
-//useEmulator = true;
+useEmulator = true;
 
 
 
@@ -70,6 +70,12 @@ var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 var bot = new builder.UniversalBot(connector);
 bot.recognizer(recognizer);
+
+var bot = new builder.UniversalBot(connector, {
+    localizerSettings: {
+        defaultLocale: "en" 
+    }
+});
 
 var nuffield_id = null;
 var getNuffieldID = function() {
@@ -443,7 +449,7 @@ intents.matches('CancelClass', [
 
 intents.matches('BookClass', [
   function(session, args, next) {
-    session.send("You can say for example 'Yoga class for next Thursday'");
+    //session.send("You can say for example 'Yoga class for next Thursday'");
     var classInfo, className, classTime, classDate;
     add_user_session();
     if(args != null) {
@@ -474,6 +480,7 @@ intents.matches('BookClass', [
     }
   },
   function (session, results, next) {
+    console.log("hi");
      var classInfo = session.dialogData.classInformation;
      if(results.response != undefined) {
        if(results.response.entity != undefined)
