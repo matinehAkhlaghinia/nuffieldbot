@@ -305,6 +305,11 @@ var make_http_request = function(url, method, json) {
 
 bot.dialog('/', intents);
 
+// bot.dialog('reset', [
+//   function(session, args) {
+//     session.send("ok");
+//   }
+// ]);
 
 
 
@@ -443,7 +448,11 @@ intents.matches('CancelClass', [
        }
        session.endDialog();
      }
-]);
+])
+.cancelAction('reset', "Transaction is canceled", {
+    matches: /^(reset|nevermind|start over)/i,
+    confirmPrompt: "Are you sure?"
+});
 
 var checkForAvailableClasses = function(body, session) {
   session.classInformation = body;
@@ -642,7 +651,11 @@ intents.matches('BookClass', [
    session.endDialog();
  }
 
-]);
+])
+.cancelAction('reset', "Transaction is canceled", {
+    matches: /^(reset|nevermind|start over)/i,
+    confirmPrompt: "Are you sure?"
+});
 
 
 
@@ -699,7 +712,11 @@ intents.matches('BookClass', [
       session.endDialogWithResult({ response: session.dialogData });
     }
 
-]);
+])
+.cancelAction('reset', "Transaction is canceled", {
+    matches: /^(reset|nevermind|start over)/i,
+    confirmPrompt: "Are you sure?"
+});
 
 
 
@@ -810,7 +827,11 @@ intents.matches('Feedback', [
     }
     session.endDialog();
   }
-]);
+])
+.cancelAction('reset', "Transaction is canceled!", {
+    matches: /^(reset|nevermind|start over)/i,
+    confirmPrompt: "Are you sure?"
+});
 
 
 intents.matches('None', [
