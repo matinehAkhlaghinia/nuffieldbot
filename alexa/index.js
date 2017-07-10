@@ -28,6 +28,8 @@ app.use(function(req, res, next) {
     console.log(req);
     req.context.log("Routing through Alexa Function: ");
     req.context.log(req);
+    req.context.log("Also important:");
+    req.context.log(req.body.session.user);
 
     next();
 });
@@ -45,7 +47,7 @@ app.post('/api/alexa/', function(req, res) {
     req.context.log("--------------------------------------------------------------------");
     
     
-    lambda.handler(req.body, ctx);
+    lambda.handler(req.body, ctx, undefined,req.context.log);
     
     
     ctx.Promise.then(resp => { 

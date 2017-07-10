@@ -1,5 +1,8 @@
 var Alexa = require('alexa-sdk');
-var debug = true;
+var request = require('request');
+var debug = false;
+var booking_bug = require('./booking_bug.js');
+var auth = require('./auth.js');
 
 
 /* All static text prompts said by Alexa - used in their respective intent */
@@ -44,12 +47,61 @@ function generate_active_intent() {
     return "Your active bookings are " + items + ". Would you like to cancel a booking?";
 }
 
-function generate_available_intent(class_type, date, time) {
+function generate_available_intent(class_type, date, time, attributes, callback) {
     var items = "";
+
+    var class_id = undefined//class_type ? booking_bug.convertSkillValue(class_type) : undefined;
+    var booking_date_partial = undefined //date ? booking_bug.convertDateSlotValue(date) : undefined;
+    //var booking_time = booking_bug.convertTimeSlotValue(time);
+    var booking_date = booking_date_partial;//.setTime(booking_time.getTime());
 
     // TODO: Get Available classes for user
 
-    return "Here are some available classes around that time. " + items + ". Would you like to make a booking?";
+    var options = auth.options_event_request;
+    options.url = 'https://nuffield-uat.bookingbug.com/api/v1/37059/events?start_date='+ booking_bug.urlDate(new Date()) + '&per_page=5&include_non_bookable=true'
+    options.headers['auth-token'] = attributes.auth_token;
+    request(options, function(error, resp, body) {
+            attributes.log(body);
+            var data = JSON.parse(body);
+            var request_count = 0;
+            var request_limit = data._embedded.events.length;
+            
+            data._embedded.events.forEach(function(obj) {
+                var uri = obj._links.event_group.href;
+                //uri = uri.substring(0, uri.lastIndexOf('{'));
+                attributes.log('raw: ' + obj._links.self.href);
+                var second_options = auth.options_event_request;
+                second_options.url = decodeURI(uri);
+                attributes.log('decoded: ' + decodeURI(uri));
+                second_options.headers['auth-token'] = attributes.auth_token;
+                
+                
+                request(second_options, (error, resu, dat) => {
+                    attributes.log('---------------------------------------------------------\n');
+                    attributes.log('----------------------data  response---------------------\n');
+                    attributes.log('---------------------------------------------------------\n');                    
+                    attributes.log(dat);
+                    var group_name = JSON.parse(dat).name;
+                    attributes.log(request_count + "th item: " + group_name);
+                    obj.description = group_name;
+                    request_count++;
+                    
+                    if(request_count >= request_limit) {
+                                    var response = booking_bug.speachify(data);
+                                    var speach = "Here are some available classes around that time. " + response + ". Would you like to make a booking?";
+                                    callback(speach);
+                    }
+                    
+                });
+                
+                
+                
+            });
+            
+
+    });
+    
+    
 }
 
 function generate_prior_intents(class_type, date) {
@@ -92,10 +144,10 @@ function give_feedback(activity, date, time, score) {
 
 
 function authentication_state_wrapper(state) {
-    return function() {
+    return function () {
         console.log("_----------------------------------------------------------------");
         console.log("Wrapper function being called with state " + this.handler.state);
-        if(this.attributes.authenticated || debug) {
+        if (this.attributes.authenticated || debug) {
             this.handler.state = states.ROOT;
             this.emitWithState(state);
         } else {
@@ -108,25 +160,25 @@ function authentication_state_wrapper(state) {
 
 /* State and state related handling */
 
-var states =  {
-    ROOT               : '_ROOT',        
-    MAKEBOOKING        : '_MAKEBOOKING',
-    MAKEBOOKINGCONFIRM : '_MAKEBOOKINGCONFIRM',
-    CANCELBOOKINGBEGIN : '_CANCELBOOKINGBEGIN',
+var states = {
+    ROOT: '_ROOT',
+    MAKEBOOKING: '_MAKEBOOKING',
+    MAKEBOOKINGCONFIRM: '_MAKEBOOKINGCONFIRM',
+    CANCELBOOKINGBEGIN: '_CANCELBOOKINGBEGIN',
     VIEWMOREINFORMATION: '_VIEWMOREINFORMATION',
-    LISTPRIOR          : '_LISTPRIOR',
-    UNAUTHENTICATED    : '_UNAUTHENTICATED'
+    LISTPRIOR: '_LISTPRIOR',
+    UNAUTHENTICATED: '_UNAUTHENTICATED'
 };
 
 
 var handlers = {
-    'LaunchRequest': function() {
+    'LaunchRequest': function () {
         console.log('LaunchRequest recieved');
         this.emit(':ask', launch_request_response);
 
     },
-    'CancelBookingIntent': function() {
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+    'CancelBookingIntent': function () {
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -150,9 +202,9 @@ var handlers = {
             console.log();
 
             // check if user wants to cancel his booking.
-            if(this.event.request.intent.confirmationStatus === 'CONFIRMED') {
+            if (this.event.request.intent.confirmationStatus === 'CONFIRMED') {
 
-                if(isValidActiveBooking(activity, date, time)) {
+                if (isValidActiveBooking(activity, date, time)) {
                     cancel_booking(activity, date, time);
                     this.emit(':tell', confirm_canceled_booking_response);
                 } else {
@@ -167,15 +219,15 @@ var handlers = {
 
         }
     },
-    'CancelBookingBeginIntent' : function() {
+    'CancelBookingBeginIntent': function () {
         console.log('Root: CancelBookingBeginIntent recieved');
         this.handler.state = states.CANCELBOOKINGBEGIN;
         this.emit(':ask', cancel_booking_begin);
     },
-    'GiveFeedbackIntent': function() {
+    'GiveFeedbackIntent': function () {
         console.log('GiveFeedbackIntent recieved');
 
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -196,11 +248,11 @@ var handlers = {
             console.log(time);
             console.log(activity);
             console.log(score);
-            if(this.event.request.intent.confirmationStatus === 'CONFIRMED') {
-                if(isValidPastBooking(activity, date, time)) {
+            if (this.event.request.intent.confirmationStatus === 'CONFIRMED') {
+                if (isValidPastBooking(activity, date, time)) {
                     give_feedback(activity, date, time, score);
                     this.emit(":tell", confirm_give_feedback_response);
-                }  else {
+                } else {
                     this.handler.state = states.LISTPRIOR;
                     this.emitWithState(":ask", not_found_give_feedback_response);
                 }
@@ -209,13 +261,13 @@ var handlers = {
             }
         }
     },
-    'ListActiveIntent': function() {
+    'ListActiveIntent': function () {
         console.log('ListActiveIntent recieved');
         this.handler.state = states.CANCELBOOKINGBEGIN;
         this.emit(':ask', generate_active_intent());
     },
-    'ListAvailableIntent': function() {
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+    'ListAvailableIntent': function () {
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -229,18 +281,18 @@ var handlers = {
             });
         } else {
             console.log('ListActiveIntent recieved');
-            var date = this.event.request.intent.slots.date;
-            var time = this.event.request.intent.slots.time;
-            var activity = this.event.request.intent.slots.activity;
+            var date = this.event.request.intent.slots.date.value;
+            var activity = this.event.request.intent.slots.activity.value;
             console.log(date);
-            console.log(time);
             console.log(activity);
             console.log('ListAvailableIntent recieved');
             this.handler.state = states.MAKEBOOKING;
-            this.emit(':ask', generate_available_intent(activity, date, time));
+            generate_available_intent(activity, date, undefined, this.attributes, (data) => {
+                this.emit(':ask', data);
+            });
         }
     },
-    'ListPriorIntent': function() {
+    'ListPriorIntent': function () {
         console.log('ListPriorIntent recieved');
         var date = this.event.request.intent.slots.date;
         var activity = this.event.request.intent.slots.activity;
@@ -253,8 +305,8 @@ var handlers = {
         this.handler.state = states.LISTPRIOR;
         this.emit(':ask', generate_prior_intents(activity, date));
     },
-    'SelectBookingIntent': function() {
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+    'SelectBookingIntent': function () {
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -281,34 +333,36 @@ var handlers = {
             };
 
             // TODO: Use the parameters returned to find available bookings.
-            if(isValidAvailableClass(activity, date, time)) {
+            if (isValidAvailableClass(activity, date, time)) {
                 this.handler.state = states.MAKEBOOKINGCONFIRM;
                 this.emit(':ask', make_booking_response);
             } else {
                 this.handler.state = states.MAKEBOOKING;
-                this.emit(':ask', make_booking_not_found_response + generate_available_intent(activity, date, time));
+                generate_available_intent(activity, date, time, this.attributes, (data) => {
+                    this.emit(':ask', make_booking_not_found_response + data);
+                });
             }
         }
     },
-    'ViewMoreInformationIntent': function() {
+    'ViewMoreInformationIntent': function () {
         console.log('ViewMoreInformationIntent recieved');
         this.handler.state = states.VIEWMOREINFORMATION;
         this.emit(':ask', view_more_information_response);
     },
-    'AMAZON.HelpIntent': function() {
+    'AMAZON.HelpIntent': function () {
         console.log("Help Intent recieved");
 
         this.emit(':ask', help_request_root_response);
     },
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         console.log("Cancel Intent recieved");
         this.emit(':tell', end_session_root_response);
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         console.log("Stop Intent recieved");
         this.emit(':tell', end_session_root_response);
     },
-    'Unhandled': function() {
+    'Unhandled': function () {
         console.log("Unhandled intent recieved");
 
         this.emit(':ask', invalid_request_root_response);
@@ -319,7 +373,7 @@ var handlers = {
 var newsession_handlers = {
     'LaunchRequest': authentication_state_wrapper('LaunchRequest'),
     'CancelBookingIntent': authentication_state_wrapper('CancelBookingIntent'),
-    'CancelBookingBeginIntent' : authentication_state_wrapper('CancelBookingBeginIntent'),
+    'CancelBookingBeginIntent': authentication_state_wrapper('CancelBookingBeginIntent'),
     'GiveFeedbackIntent': authentication_state_wrapper('GiveFeedbackIntent'),
     'ListActiveIntent': authentication_state_wrapper('ListActiveIntent'),
     'ListAvailableIntent': authentication_state_wrapper('ListAvailableIntent'),
@@ -327,11 +381,11 @@ var newsession_handlers = {
     'SelectBookingIntent': authentication_state_wrapper('SelectBookingIntent'),
     'ViewMoreInformationIntent': authentication_state_wrapper('ViewMoreInformationIntent'),
     'Unhandled': authentication_state_wrapper('Unhandled'),
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         console.log("Cancel Intent recieved");
         this.emit(':tell', end_session_root_response);
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         console.log("Stop Intent recieved");
         this.emit(':tell', end_session_root_response);
     }
@@ -339,7 +393,7 @@ var newsession_handlers = {
 
 // If unauthenticated exit skill irrespective of requested intent - without home gym no info can be provided.
 var unauthenticated_handlers = Alexa.CreateStateHandler(states.UNAUTHENTICATED, {
-    'Unhandled': function() {
+    'Unhandled': function () {
         this.emit(':tell', unauthenticated_client_response);
     }
 });
@@ -349,8 +403,8 @@ var root_handlers = Alexa.CreateStateHandler(states.ROOT, handlers);
 
 var makebooking_handlers = Alexa.CreateStateHandler(states.MAKEBOOKING, {
 
-    'SelectBookingIntent': function() {
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+    'SelectBookingIntent': function () {
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -377,17 +431,19 @@ var makebooking_handlers = Alexa.CreateStateHandler(states.MAKEBOOKING, {
             };
 
             // TODO: Use the parameters returned to find available bookings.
-            if(isValidAvailableClass(activity, date, time)) {
+            if (isValidAvailableClass(activity, date, time)) {
                 this.handler.state = states.MAKEBOOKINGCONFIRM;
                 this.emit(':ask', make_booking_response);
             } else {
                 this.handler.state = states.MAKEBOOKING;
-                this.emit(':ask', make_booking_not_found_response + generate_available_intent(activity, date, time));
+                generate_available_intent(activity, date, time, this.attributes, (data) => {
+                    this.emit(':ask', make_booking_not_found_response + data);
+                });
             }
         }
     },
 
-    'AMAZON.HelpIntent': function() {
+    'AMAZON.HelpIntent': function () {
         console.log("makebooking: helpintent recieved");
 
         this.emit(':ask', help_request_makebooking_response);
@@ -395,48 +451,48 @@ var makebooking_handlers = Alexa.CreateStateHandler(states.MAKEBOOKING, {
 
     },
 
-    'CustomYesIntent': function() {
+    'CustomYesIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
 
-    'CustomNoIntent': function() {
+    'CustomNoIntent': function () {
         this.shouldEndSession = true;
     },
-    'LaunchRequest'    : function() {
+    'LaunchRequest': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.PreviousIntent': function() {
+    'AMAZON.PreviousIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.RepeatIntent': function() {
+    'AMAZON.RepeatIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
-    'AMAZON.StartOverIntent': function() {
+    'AMAZON.StartOverIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.CancelIntent");
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.StopIntent");
     },
-    'Unhandled': function() {
+    'Unhandled': function () {
         this.emit(':tell', unhandled_request_make_booking_response);
     }
 });
 
 
 var makebookingconfirm_handler = Alexa.CreateStateHandler(states.MAKEBOOKINGCONFIRM, {
-    'LaunchRequest'    : function() {
+    'LaunchRequest': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.HelpIntent': function() {
+    'AMAZON.HelpIntent': function () {
         console.log("makebookingconfirm: help request");
         var date = this.attributes["params"].date;
         var time = this.attributes["params"].time;
@@ -444,7 +500,7 @@ var makebookingconfirm_handler = Alexa.CreateStateHandler(states.MAKEBOOKINGCONF
         this.emit(':ask', generate_makebookingconfirm_help_response(activity, date, time));
     },
 
-    'CustomYesIntent': function() {
+    'CustomYesIntent': function () {
         console.log("makebookingconfirm: yes request");
 
         var date = this.attributes["params"].date;
@@ -456,41 +512,41 @@ var makebookingconfirm_handler = Alexa.CreateStateHandler(states.MAKEBOOKINGCONF
         this.emit(':tell', "Okay sure, I have made the booking. Check the amazon app for more information");
 
     },
-    'CustomNoIntent': function() {
+    'CustomNoIntent': function () {
         console.log("makebookingconfirm: no intent");
         this.emit(':tell', confirmation_denied_make_booking_response);
     },
 
-    'AMAZON.PreviousIntent': function() {
+    'AMAZON.PreviousIntent': function () {
         this.handler.state = states.MAKEBOOKING;
         this.emitWithState("SelectBookingIntent")
     },
-    'AMAZON.RepeatIntent': function() {
+    'AMAZON.RepeatIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
 
 
-    'AMAZON.StartOverIntent': function() {
+    'AMAZON.StartOverIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
 
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.CancelIntent");
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.StopIntent");
     },
-    'Unhandled': function() {
+    'Unhandled': function () {
         this.emitWithState("AMAZON.HelpIntent");
     }
 });
 
 var cancelbookingbegin_handler = Alexa.CreateStateHandler(states.CANCELBOOKINGBEGIN, {
-    'CancelBookingIntent': function() {
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+    'CancelBookingIntent': function () {
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -514,9 +570,9 @@ var cancelbookingbegin_handler = Alexa.CreateStateHandler(states.CANCELBOOKINGBE
             console.log(this.event.request.intent);
 
 
-            if(this.event.request.intent.confirmationStatus === 'CONFIRMED') {
+            if (this.event.request.intent.confirmationStatus === 'CONFIRMED') {
 
-                if(isValidActiveBooking(activity, date, time)) {
+                if (isValidActiveBooking(activity, date, time)) {
                     cancel_booking(activity, date, time);
                     this.emit(':tell', confirm_canceled_booking_response);
                 } else {
@@ -531,62 +587,62 @@ var cancelbookingbegin_handler = Alexa.CreateStateHandler(states.CANCELBOOKINGBE
 
         }
     },
-    'ListActiveIntent': function() {
+    'ListActiveIntent': function () {
         console.log('ListActiveIntent recieved');
         this.emit(':ask', generate_active_intent());
     },
-    'LaunchRequest'    : function() {
+    'LaunchRequest': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.HelpIntent': function() {
+    'AMAZON.HelpIntent': function () {
         console.log("cancelbookingbegin: helpintent");
         this.emit(':ask', help_request_cancel_booking_begin_response)
     },
 
-    'AMAZON.PreviousIntent': function() {
+    'AMAZON.PreviousIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.RepeatIntent': function() {
+    'AMAZON.RepeatIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
 
-    'CustomYesIntent': function() {
+    'CustomYesIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
 
-    'CustomNoIntent': function() {
+    'CustomNoIntent': function () {
         this.emit(':tell', confirmation_denied_cancel_booking_response);
     },
 
 
-    'AMAZON.StartOverIntent': function() {
+    'AMAZON.StartOverIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
 
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.CancelIntent");
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.StopIntent");
     },
-    'Unhandled': function() {
+    'Unhandled': function () {
         this.emitWithState("AMAZON.HelpIntent");
     }
 });
 
 var viewmoreinformation_handler = Alexa.CreateStateHandler(states.VIEWMOREINFORMATION, {
-    'ListActiveIntent': function() {
+    'ListActiveIntent': function () {
         console.log('ListActiveIntent recieved');
         this.handler.state = states.CANCELBOOKINGBEGIN;
         this.emit(':ask', generate_active_intent());
     },
-    'ListAvailableIntent': function() {
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+    'ListAvailableIntent': function () {
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -608,10 +664,13 @@ var viewmoreinformation_handler = Alexa.CreateStateHandler(states.VIEWMOREINFORM
             console.log(activity);
             console.log('ListAvailableIntent recieved');
             this.handler.state = states.MAKEBOOKING;
-            this.emit(':ask', generate_available_intent(activity, date, time));
+            generate_active_intent(activity, date, time, this.attributes, function(data) {
+                
+                this.emit(':ask', data);
+            });
         }
     },
-    'ListPriorIntent': function() {
+    'ListPriorIntent': function () {
         console.log('ListPriorIntent recieved');
         var date = this.event.request.intent.slots.date;
         var activity = this.event.request.intent.slots.activity;
@@ -624,45 +683,45 @@ var viewmoreinformation_handler = Alexa.CreateStateHandler(states.VIEWMOREINFORM
         this.handler.state = states.LISTPRIOR;
         this.emit(':ask', generate_prior_intents(activity, date));
     },
-    'LaunchRequest'    : function() {
+    'LaunchRequest': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.HelpIntent': function() {
+    'AMAZON.HelpIntent': function () {
         console.log("viewmoreinformation: helpintent");
         this.emit(':ask', help_request_view_information_response);
     },
 
 
-    'AMAZON.PreviousIntent': function() {
+    'AMAZON.PreviousIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.RepeatIntent': function() {
+    'AMAZON.RepeatIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
 
 
-    'AMAZON.StartOverIntent': function() {
+    'AMAZON.StartOverIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
 
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.CancelIntent");
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.StopIntent");
     },
-    'Unhandled': function() {
+    'Unhandled': function () {
         this.emitWithState("AMAZON.HelpIntent");
     }
 });
 
 var listprior_handler = Alexa.CreateStateHandler(states.LISTPRIOR, {
-    'ListPriorIntent': function() {
+    'ListPriorIntent': function () {
         console.log('ListPriorIntent recieved');
         var date = this.event.request.intent.slots.date;
         var activity = this.event.request.intent.slots.activity;
@@ -670,10 +729,10 @@ var listprior_handler = Alexa.CreateStateHandler(states.LISTPRIOR, {
         console.log(activity);
         this.emit(':ask', generate_prior_intents(activity, date));
     },
-    'GiveFeedbackIntent': function() {
+    'GiveFeedbackIntent': function () {
         console.log('GiveFeedbackIntent recieved');
 
-        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS"){
+        if (this.event.request.dialogState == "STARTED" || this.event.request.dialogState == "IN_PROGRESS") {
             this.context.succeed({
                 "response": {
                     "directives": [
@@ -694,7 +753,7 @@ var listprior_handler = Alexa.CreateStateHandler(states.LISTPRIOR, {
             console.log(time);
             console.log(activity);
             console.log(score);
-            if(this.event.request.intent.confirmationStatus === 'CONFIRMED') {
+            if (this.event.request.intent.confirmationStatus === 'CONFIRMED') {
                 if (isValidPastBooking(activity, date, time)) {
                     give_feedback(activity, date, time, score);
                     this.emit(":tell", confirm_give_feedback_response);
@@ -709,85 +768,106 @@ var listprior_handler = Alexa.CreateStateHandler(states.LISTPRIOR, {
         }
 
     },
-    'LaunchRequest'    : function() {
+    'LaunchRequest': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.HelpIntent': function() {
+    'AMAZON.HelpIntent': function () {
         console.log("listprior: help intent");
         this.emit(':ask', help_request_list_prior_response);
     },
 
-    'CustomYesIntent': function() {
+    'CustomYesIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
-    'CustomNoIntent': function() {
+    'CustomNoIntent': function () {
         this.shouldEndSession = true;
     },
 
-    'AMAZON.PreviousIntent': function() {
+    'AMAZON.PreviousIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
-    'AMAZON.RepeatIntent': function() {
+    'AMAZON.RepeatIntent': function () {
         this.emitWithState("AMAZON.HelpIntent");
     },
 
 
-    'AMAZON.StartOverIntent': function() {
+    'AMAZON.StartOverIntent': function () {
         this.handler.state = states.ROOT;
         this.emitWithState('LaunchRequest');
     },
 
-    'AMAZON.CancelIntent': function() {
+    'AMAZON.CancelIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.CancelIntent");
     },
-    'AMAZON.StopIntent': function() {
+    'AMAZON.StopIntent': function () {
         this.handler.state = "";
         this.emitWithState("AMAZON.StopIntent");
     },
-    'Unhandled': function() {
+    'Unhandled': function () {
         this.emitWithState("AMAZON.HelpIntent");
     }
 });
 
-module.exports.handler =  function(event, context, callback) {
-    
+module.exports.handler = function (event, context, callback, logging_function) {
+
     var appId = process.env.APPLICATION_ID;
 
     // Authenticate user using token from Microsoft ADBC
 
-    var token = undefined //event.session.user.accessToken;
+    var token = event.session.user.accessToken;
 
 
-    if(token || debug) {
+    if (token || debug) {
         // TODO: Implement token validation and use
 
-        if(event.session.attributes) {
+        // Get booking_bug authentication token.
+
+
+
+        if (event.session.attributes) {
             event.session.attributes["authenticated"] = true;
-            event.session.attributes["user_id"] = "null";
+            event.session.attributes["user_id"] = event.session.user.userId;
+            event.session.attributes['log'] = logging_function;
         } else {
             event.session.attributes = {
-                authenticated: false,
+                authenticated: true,
+                user_id: event.session.user.accessToken.userId,
+                log: logging_function
             };
         }
-    } else {
-        // TODO: Implement sign in reminder
+        
+        request(auth.options_token_request, function(error, resp, data) {
+            if(error) throw new Error(error);
 
-        if(event.session.attributes) {
+            event.session.attributes['auth_token'] = JSON.parse(data).auth_token;
+
+            var alexa = Alexa.handler(event, context);
+            alexa.appId = appId;
+            alexa.registerHandlers(root_handlers, unauthenticated_handlers, newsession_handlers, makebooking_handlers, makebookingconfirm_handler, cancelbookingbegin_handler, viewmoreinformation_handler, listprior_handler);
+            alexa.execute();
+
+        });
+
+    } else {
+        // TODO: Implement sign in reminder card
+
+        if (event.session.attributes) {
             event.session.attributes["authenticated"] = false;
         } else {
             event.session.attributes = {
                 authenticated: false,
             };
         }
+            var alexa = Alexa.handler(event, context);
+            alexa.appId = appId;
+            alexa.registerHandlers(root_handlers, unauthenticated_handlers, newsession_handlers, makebooking_handlers, makebookingconfirm_handler, cancelbookingbegin_handler, viewmoreinformation_handler, listprior_handler);
+            alexa.execute();
     }
 
 
-    var alexa = Alexa.handler(event, context);
-    alexa.appId = appId;
-    alexa.registerHandlers(root_handlers, unauthenticated_handlers, newsession_handlers, makebooking_handlers, makebookingconfirm_handler, cancelbookingbegin_handler, viewmoreinformation_handler, listprior_handler);
-    alexa.execute();
+
 }
 
